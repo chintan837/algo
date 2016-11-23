@@ -8,18 +8,33 @@ void sum() {
 }
 
 void multiply(int *n1, unsigned int l1, int *n2, unsigned int l2, int *prod, unsigned int l) {
-	if ((l1 == 1) && (l2 == 1)) {
+	int i;
+	if ((l1 <= 1) && (l2 <= 1)) {
 		prod[0] = n1[0] * n2[0];
 		if (prod[0] > 9) {
 			prod[1] = prod[0]/10;
 			prod[0] = prod[0]%10;
 		}
 	}
-
+	
+	printf("calculating ac\n");
 	// calculate ac
-	
-	
+	int *ac = calloc(l1, sizeof(int));
+	multiply(&(n1[l1/2]), l1/2, &(n2[l2/2]), l2/2, ac, l1);
+
+	for(i = l1; i >= 0; i--) {
+		printf("%d", ac[i]);
+	}
+	printf("\n");
+
 	// calculate bd
+	int *bd = calloc(l1, sizeof(int));
+	multiply(&(n1[0]), l1/2, &(n2[0]), l2/2, ac, l2);
+
+	// calculate (a+b)
+	
+
+	// calculate (c+d)
 	//
 	//
 	// calculate (a+b)*(c+d)
@@ -40,12 +55,16 @@ int main() {
 
 	//	const char *num1 = "3141592653589793238462643383279502884197169399375105820974944592";
 	//	const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
-	const char *num1 = "5678";
-	const char *num2 = "1234";
+	//	const char *num1 = "5678";
+	//	const char *num2 = "1234";
+	const char *num1 = "15";
+	const char *num2 = "23";
+	//	const char *num1 = "5";
+	//	const char *num2 = "7";
 
 	unsigned int l1 = strlen(num1);
 	unsigned int l2 = strlen(num2);
-	unsigned int l = l1+ l2 + 1;
+	unsigned int l = l1 + l2 + 1;
 	int *n1 = calloc(l1, sizeof(int));
 	int *n2 = calloc(l2, sizeof(int));
 	int *prod = calloc(l, sizeof(int));
