@@ -10,7 +10,7 @@ void printnum(char *label, int *array, int len) {
 
 }
 
-int getlen(char *array, int max) {
+int getlen(int *array, int max) {
 	int i; int len = 0;
 	for (i = 0; i < max; i++) {
 		if (array[i])
@@ -52,7 +52,16 @@ void sum(int *a, unsigned int l1, int *b, unsigned int l2, int *apb, unsigned in
 
 void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, unsigned int l) {
 	int i;
-	if ((l1 <= 1) && (l2 <= 1)) {
+	unsigned int len1 = 0, len2= 0, len = 0;
+	len1 = getlen(ab, l1);
+	printnum("orig ab", ab, l1);
+	printnum("new ab", ab, len1);
+
+	len2 = getlen(cd, l2);
+	printnum("orig cd", cd, l2);
+	printnum("new cd", cd, len2);
+	
+	if ((len1 <= 1) && (len2 <= 1)) {
 		prod[0] = ab[0] * cd[0];
 		if (prod[0] > 9) {
 			prod[1] = prod[0]/10;
@@ -68,6 +77,7 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 	int *cpd = calloc(l2+1, sizeof(int));
 	int *apbcpd = calloc(l1+1+l2+1, sizeof(int));
 
+
 	// calculate ac
 	multiply(&(ab[l1/2]), l1/2, &(cd[l2/2]), l2/2, ac, l1);
 	printnum("a", &(ab[l1/2]), l1/2);
@@ -77,10 +87,10 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 	
 	
 	// calculate bd
-	multiply(&(ab[0]), l1/2, &(cd[0]), l2/2, ac, l2);
+	multiply(&(ab[0]), l1/2, &(cd[0]), l2/2, bd, l2);
 	printnum("b", &(ab[0]), l1/2);
 	printnum("d", &(cd[0]), l2/2);
-	printnum("bd", ac , l1);
+	printnum("bd", bd, l2);
 	getchar();
 
 	// calculate (a+b)
@@ -102,7 +112,7 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 	sub(apbcpd, l1+l2+2, ac, l1);
 	sub(apbcpd, l1+l2+2, bd, l2);
 
-	printnum("apbcpd", apbcpd, l1+l2+2);
+	printnum("apbcpd after sub", apbcpd, l1+l2+2);
 	getchar();
 	printf("--------\n");
 
@@ -131,10 +141,10 @@ int main() {
 	int *prod = calloc(l, sizeof(int));
 
 	int i, j;
-	for (i = l1-1, j = 0; i >= 0, j < l1; i--, j++) {
+	for (i = l1-1, j = 0; j < l1; i--, j++) {
 		n1[j] = num1[i] - 48;
 	}
-	for (i = l2-1, j = 0; i >= 0, j < l2; i--, j++) {
+	for (i = l2-1, j = 0; j < l2; i--, j++) {
 		n2[j] = num2[i] - 48;
 	}
 
