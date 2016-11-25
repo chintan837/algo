@@ -1,6 +1,14 @@
+/*
+http://graphics.stanford.edu/~seander/bithacks.html
+
+bit hacks, for later
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#define MAX(a,b) ((a)>(b)?(a):(b))
 
 void printnum(char *label, int *array, int len) {
 	printf("%s: ", label);
@@ -37,9 +45,10 @@ void sub(int *a, unsigned int l1, int *b, unsigned int l2) {
 	return;
 }
 
-void sum(int *a, unsigned int l1, int *b, unsigned int l2, int *apb, unsigned int l) {
+void sum(int *a, int *b, unsigned int len, int *apb) {
 	int i;
-	for (i = 0; i < l1; i++) {
+	// lenth of apb is 1+ than len
+	for (i = 0; i < len; i++) {
 		apb[i] = apb[i] + a[i] + b[i];
 		if (apb[i] > 9) {
 			apb[i+1] = apb[i]/10;
@@ -50,6 +59,7 @@ void sum(int *a, unsigned int l1, int *b, unsigned int l2, int *apb, unsigned in
 	return;
 }
 
+#if 0
 void multiply_old(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, unsigned int l) {
 	int i;
 	unsigned int len1 = 0, len2= 0, len = 0;
@@ -120,6 +130,84 @@ void multiply_old(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod,
 
 	return;
 }
+#endif
+
+void multiply(int *num1, int *num2, int len, int *prod) {
+	if (len == 1) {
+		prod[0] = num1[0] * num2[0];
+		if (prod[0] > 9) {
+			prod[1] = prod[0]/10;
+			prod[0] = prod[0]%10;
+		}
+		return;
+	}
+
+	printnum("num1----", num1, len);
+	printf("%d\n", len);
+	printnum("num2----", num2, len);
+	printf("%d\n", len);
+
+	int *ac = calloc(len, sizeof(int));
+	int *bd = calloc(len, sizeof(int));
+	int *apb = calloc(len+1, sizeof(int));
+	int *cpd = calloc(len+1, sizeof(int));
+	int *apbcpd = calloc((len+1)*2, sizeof(int));
+
+	multiply(&(num1[len/2]), &(num2[len/2]), len/2, ac);
+	printnum("ac", ac , len);
+	multiply(&(num1[0]), &(num2[0]), len/2, bd);
+	printnum("bd", bd , len);
+
+	// calculate (a+b)
+	sum(&(num1[len/2]), &(num1[0]), len/2, apb);
+	// calculate (c+d)
+	sum(&(num2[len/2]), &(num2[0]), len/2, cpd);
+
+	unsigned int l = MAX(getlen(apb, len), getlen(cpd, len));
+	printf("l = %d\n", l);
+	while (l & (l-1))
+		l++;
+	printf("new l = %d\n", l);
+	multiply(apb, cpd, l, apbcpd);
+	printnum("apbcpd", apbcpd, len*2);
+
+	// calculate (3)-(2)-(1)
+	sub(apbcpd, (len+1)*2, ac, len);
+	sub(apbcpd, (len+1)*2, bd, len);
+	printnum("apbcpd after sub", apbcpd, (len+1)*2);
+
+	int i = 0, j = 0, k = 0;
+	while (i < len) {
+		prod[i] = bd[j];
+		i++; j++;
+	}
+	printnum("prod 1", prod, len*2);
+	while (i < len*2) {
+		prod[i] = ac[k];
+		i++; k++;
+	}
+	printnum("prod 2", prod, len*2);
+	for (i = len/2, j = 0; j < len+1; j++, i++) {
+		prod[i] += apbcpd[j];
+		printf("prod[i]: %d[%d], apbcpd[j]:%d[%d]\n",
+				prod[i], i, apbcpd[j], j);
+		if (prod[i] > 9) {
+			prod[i+1] += prod[i]/10;
+			printf("prod[i+1]: %d[%d]\n", prod[i+1], i+1);
+			prod[i] = prod[i]%10;
+			printf("prod[i]: %d[%d]\n", prod[i], i);
+		}
+	}
+	printnum("prod 3", prod, len*2);
+
+	printf("--------\n");
+
+	free(ac);
+	free(bd);
+	free(apb);
+	free(cpd);
+	free(apbcpd);
+}
 
 int main() {
 	printf("karatsub multiplications\n");
@@ -128,35 +216,36 @@ int main() {
 	//	const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
 	//	const char *num1 = "5678";
 	//	const char *num2 = "1234";
-	const char *num1 = "15";
-	const char *num2 = "23";
+	const char *num1 = "9999";
+	const char *num2 = "9999";
+	//	const char *num1 = "99";
+	//	const char *num2 = "99";
 	//	const char *num1 = "5";
 	//	const char *num2 = "7";
 
 	unsigned int l1 = strlen(num1);
 	unsigned int l2 = strlen(num2);
-	unsigned int l = l1 + l2 + 1;
-	int *n1 = calloc(l1, sizeof(int));
-	int *n2 = calloc(l2, sizeof(int));
-	int *prod = calloc(l, sizeof(int));
+	unsigned int len = MAX(l1, l2);
+	int *n1 = calloc(len, sizeof(int));
+	int *n2 = calloc(len, sizeof(int));
+	int *prod = calloc(len*2, sizeof(int));
 
 	int i, j;
-	for (i = l1-1, j = 0; j < l1; i--, j++) {
+	for (i = len-1, j = 0; j < len; i--, j++) {
 		n1[j] = num1[i] - 48;
-	}
-	for (i = l2-1, j = 0; j < l2; i--, j++) {
 		n2[j] = num2[i] - 48;
 	}
+	
+	printnum("n1", n1, len);
+	printnum("n2", n2, len);
 
-	printnum("n1", n1, l1);
-	printnum("n2", n2, l2);
+	//	multiply_old(n1, l1, n2, l2, prod, l);
 
-	multiply_old(n1, l1, n2, l2, prod, l);
+	// asume lenghts of both numbers are same for now
+	// max size of answer will be 2*len
+	multiply(n1, n2, len, prod);
 
-	for(i = l; i >= 0; i--) {
-		printf("%d", prod[i]);
-	}
-	printf("\n");
+	printnum("prod", prod, len*2);
 
 	free(n1);
 	free(n2);
