@@ -50,7 +50,7 @@ void sum(int *a, unsigned int l1, int *b, unsigned int l2, int *apb, unsigned in
 	return;
 }
 
-void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, unsigned int l) {
+void multiply_old(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, unsigned int l) {
 	int i;
 	unsigned int len1 = 0, len2= 0, len = 0;
 	len1 = getlen(ab, l1);
@@ -79,7 +79,7 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 
 
 	// calculate ac
-	multiply(&(ab[l1/2]), l1/2, &(cd[l2/2]), l2/2, ac, l1);
+	multiply_old(&(ab[l1/2]), l1/2, &(cd[l2/2]), l2/2, ac, l1);
 	printnum("a", &(ab[l1/2]), l1/2);
 	printnum("c", &(cd[l2/2]), l2/2);
 	printnum("ac", ac , l1);
@@ -87,7 +87,7 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 	
 	
 	// calculate bd
-	multiply(&(ab[0]), l1/2, &(cd[0]), l2/2, bd, l2);
+	multiply_old(&(ab[0]), l1/2, &(cd[0]), l2/2, bd, l2);
 	printnum("b", &(ab[0]), l1/2);
 	printnum("d", &(cd[0]), l2/2);
 	printnum("bd", bd, l2);
@@ -104,7 +104,7 @@ void multiply(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod, uns
 	getchar();
 	
 	// calculate (a+b)*(c+d)
-	multiply(&(apb[0]), l1/2+1, &(cpd[0]), l2/2+1, apbcpd, l1/2+1+l2/2+1);
+	multiply_old(&(apb[0]), l1/2+1, &(cpd[0]), l2/2+1, apbcpd, l1/2+1+l2/2+1);
 	printnum("apbcpd", apbcpd, l1/2+1+l2/2+1);
 	getchar();
 
@@ -151,7 +151,7 @@ int main() {
 	printnum("n1", n1, l1);
 	printnum("n2", n2, l2);
 
-	multiply(n1, l1, n2, l2, prod, l);
+	multiply_old(n1, l1, n2, l2, prod, l);
 
 	for(i = l; i >= 0; i--) {
 		printf("%d", prod[i]);
