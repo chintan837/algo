@@ -200,7 +200,7 @@ void multiply(int *num1, int *num2, int len, int *prod) {
 	}
 	printnum("prod 3", prod, len*2);
 
-	printf("--------\n");
+	printf("--------------------------\n");
 
 	free(ac);
 	free(bd);
