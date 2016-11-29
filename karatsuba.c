@@ -30,8 +30,6 @@ int getlen(int *array, int max) {
 // in place subtraction
 void sub(int ctx, int *a, unsigned int l1, int *b, unsigned int l2) {
 	int i, j;
-	printnum("sub a", ctx, a, l1);
-	printnum("sub b", ctx, b, l2);
 	for (i = 0; i < l2; i++) {
 		if (a[i] < b[i]) {
 			a[i] += 10;
@@ -131,7 +129,7 @@ void multiply_old(int *ab, unsigned int l1, int *cd, unsigned int l2, int *prod,
 
 	printnum("apbcpd after sub", apbcpd, l1+l2+2);
 	getchar();
-	printf("--------\n");
+	//printf("--------\n");
 
 	// sum 10^n(1) + 10^n/2(4) + (2)
 
@@ -150,12 +148,12 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 	}
 
 	int myctx = ++ctx;
-	printf("%d --------------------------\n", myctx);
+	//printf("%d --------------------------\n", myctx);
 
-	printnum("num1----", myctx, num1, len);
-	printf("%d len %d\n", myctx, len);
-	printnum("num2----", myctx, num2, len);
-	printf("%d len %d\n", myctx, len);
+	//printnum("num1----", myctx, num1, len);
+	//printf("%d len %d\n", myctx, len);
+	//printnum("num2----", myctx, num2, len);
+	//printf("%d len %d\n", myctx, len);
 
 	int *ac = calloc(len, sizeof(int));
 	int *bd = calloc(len, sizeof(int));
@@ -164,9 +162,9 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 	int *apbcpd = calloc((len+1)*2, sizeof(int));
 
 	ctx += multiply(ctx, &(num1[len/2]), &(num2[len/2]), len/2, ac);
-	printnum("ac", myctx, ac , len);
+	//printnum("ac", myctx, ac , len);
 	ctx += multiply(ctx, &(num1[0]), &(num2[0]), len/2, bd);
-	printnum("bd", myctx, bd , len);
+	//printnum("bd", myctx, bd , len);
 
 	// calculate (a+b)
 	sum(&(num1[len/2]), &(num1[0]), len/2, apb);
@@ -174,43 +172,42 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 	sum(&(num2[len/2]), &(num2[0]), len/2, cpd);
 
 	unsigned int l = MAX(getlen(apb, len), getlen(cpd, len));
-	printf("%d l = %d\n", myctx, l);
+	//	printf("%d l = %d\n", myctx, l);
 	while (l & (l-1))
 		l++;
-	printf("%d new l = %d\n", myctx, l);
+	//	printf("%d new l = %d\n", myctx, l);
 	ctx += multiply(ctx, apb, cpd, l, apbcpd);
-	printnum("apbcpd", myctx, apbcpd, len*2);
+	//printnum("apbcpd", myctx, apbcpd, len*2);
 
 	// calculate (3)-(2)-(1)
 	sub(myctx, apbcpd, (len+1)*2, ac, len);
 	sub(myctx, apbcpd, (len+1)*2, bd, len);
-	printnum("apbcpd after sub", myctx, apbcpd, (len+1)*2);
+	//printnum("apbcpd after sub", myctx, apbcpd, (len+1)*2);
 
 	int i = 0, j = 0, k = 0;
 	while (i < len) {
 		prod[i] = bd[j];
 		i++; j++;
 	}
-	printnum("prod 1", myctx, prod, len*2);
+	//printnum("prod 1", myctx, prod, len*2);
 	while (i < len*2) {
 		prod[i] = ac[k];
 		i++; k++;
 	}
-	printnum("prod 2", myctx, prod, len*2);
+	//printnum("prod 2", myctx, prod, len*2);
 	for (i = len/2, j = 0; j < len+1; j++, i++) {
 		prod[i] += apbcpd[j];
-		printf("%d prod[i]: %d[%d], apbcpd[j]:%d[%d]\n",
-				myctx, prod[i], i, apbcpd[j], j);
+		//printf("%d prod[i]: %d[%d], apbcpd[j]:%d[%d]\n", myctx, prod[i], i, apbcpd[j], j);
 		if (prod[i] > 9) {
 			prod[i+1] += prod[i]/10;
-			printf("%d prod[i+1]: %d[%d]\n", myctx, prod[i+1], i+1);
+			//printf("%d prod[i+1]: %d[%d]\n", myctx, prod[i+1], i+1);
 			prod[i] = prod[i]%10;
-			printf("%d prod[i]: %d[%d]\n", myctx, prod[i], i);
+			//printf("%d prod[i]: %d[%d]\n", myctx, prod[i], i);
 		}
 	}
-	printnum("prod 3", myctx, prod, len*2);
+	//printnum("prod 3", myctx, prod, len*2);
 
-	printf("%d --------------------------\n", myctx);
+	//printf("%d --------------------------\n", myctx);
 
 	free(ac);
 	free(bd);
@@ -224,12 +221,12 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 int main() {
 	printf("karatsub multiplications\n");
 
-	//	const char *num1 = "3141592653589793238462643383279502884197169399375105820974944592";
-	//	const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
+	const char *num1 = "3141592653589793238462643383279502884197169399375105820974944592";
+	const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
 	//	const char *num1 = "5678";
 	//	const char *num2 = "1234";
-		const char *num1 = "12345678";
-		const char *num2 = "12345678";
+	//	const char *num1 = "12345678";
+	//	const char *num2 = "12345678";
 	//	const char *num1 = "99";
 	//	const char *num2 = "99";
 	//	const char *num1 = "5";
