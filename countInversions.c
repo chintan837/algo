@@ -3,9 +3,9 @@
 #include <string.h>
 #include <time.h>
 
-int mergesort(int *array, int len) {
+unsigned long long mergesort(int *array, int len) {
 	//exit condition
-	int count = 0;
+	unsigned long long count = 0;
 	if (len <= 1) {
 		return count;
 	}
@@ -18,8 +18,8 @@ int mergesort(int *array, int len) {
 	int i = 0;
 	int j = len/2;
 	int k = 0;
-	for ( ; k < len; k++) {
-		if (() && (array[i] <= array[j])) {
+	while (k < len) {
+		if (array[i] <= array[j]) {
 			result[k] = array[i];
 			i++;
 		} else {
@@ -27,7 +27,21 @@ int mergesort(int *array, int len) {
 			j++;
 			// inc count by all emaining elements in array[i]
 			count += len/2-i;
-
+		}
+		k++;
+		if (i >= len/2) {
+			while (k < len) {
+				result[k] = array[j];
+				k++; j++;
+			}
+			break;
+		}
+		if (j >= len) {
+			while (k < len) {
+				result[k] = array[i];
+				k++; i++;
+			}
+			break;
 		}
 	}
 	for (i = 0; i < len; i++)
@@ -39,29 +53,37 @@ int mergesort(int *array, int len) {
 }
 
 int main(void) {
+
+#if 0
 	time_t t;
-	int array[] = {1, 2, 3, 4, 5, 6, 7, 8};
+	int array[] = {1, 2, 3, 4, 5, 6, 7};
 	int len = sizeof(array)/sizeof(int);
 	//	srand((unsigned) time(&t));
 	srand(1);
-
 	for(int i = 0; i < len; i++) {
 		int random = rand()%len;
 		int tmp = array[i];
 		array[i] = array[random];
 		array[random] = tmp;
 	}
-
-	len = 2;
-	for (int i = 0; i < len; i++) {
-		printf("%d", array[i]);
-	}
-	printf("\n");
-	printf("Inversions: %d\n", mergesort(array, len));
+#endif
+	int len = 100000;
+	int *array = calloc(len, sizeof(int));
+	
+	FILE *fp = fopen("IntegerArray.txt", "r");
 
 	for (int i = 0; i < len; i++) {
-		printf("%d", array[i]);
+		fscanf(fp, "%d\n", &array[i]);
+		printf("%d\n", array[i]);
 	}
 	printf("\n");
-
+	printf("Inversions: %llu\n", mergesort(array, len));
+#if 0
+	for (int i = 0; i < len; i++) {
+		printf("%d\n", array[i]);
+	}
+	printf("\n");
+#endif
+	free(array);
+	fclose(fp);
 }
