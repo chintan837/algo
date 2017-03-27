@@ -3,38 +3,114 @@
 #include <string.h>
 #include <time.h>
 
-struct edge;
+struct edgelist;
 
 struct node {
 	int value;
-	// list of edges
-	struct edge *edgelist;	// pointer to head of list of nodes
+	struct edgelist *neigh;	// pointer to head of list of edges 
 }*Nodes;
 
 struct edge {
 	struct node *a;
 	struct node *b;
-	struct edge *next;
-	struct edge *prev;
+	struct edgelist *pos;
 };
 
-int addedge(int a, int b, struct edge **Edges) {
+struct edgelist {
+	struct edge *edge;
+	struct edgelist *next;
+	struct edgelist *prev;
+};
+
+struct edgelist *Edges = NULL;
+
+int addneigh(int a, int b) {
 	if (a > b)
 		return 0;
 
+	//	printf("Added edge %d -- %d\n", a, b);
+
 	struct node *A = &Nodes[a];
 	struct node *B = &Nodes[b];
-	struct edge *newedge = malloc(sizeof(struct edge));
+	struct edge *newedge = malloc (sizeof (struct edge));
 	newedge->a = A;
 	newedge->b = B;
-	newedge->next = *Edges;
-	newedge->prev = NULL;
-	if (*Edges)
-		(*Edges)->prev = newedge;
-	*Edges = newedge;	
-//	printf("Added edge %d -- %d\n", a, b);
 
+	struct edgelist *newedgelist;
+	newedgelist = malloc (sizeof(struct edgelist));
+	newedge->pos = newedgelist;
+	newedgelist->edge = newedge;
+	newedgelist->next = Edges;
+	Edges = newedgelist;
+
+	newedgelist = malloc (sizeof(struct edgelist));
+	newedgelist->edge = newedge;
+	newedgelist->next = A->neigh;
+	A->neigh = newedgelist;
+	
+	newedgelist = malloc (sizeof(struct edgelist));
+	newedgelist->edge = newedge;
+	newedgelist->next = B->neigh;
+	B->neigh = newedgelist;
 	return 1;
+}
+
+int purgelist(struct edgelist **list) {
+	int ret = 0;
+	struct edgelist *curr;
+	struct edgelist *prev;
+	
+	curr = *list;
+	prev = NULL;
+	while ((curr = *list) && (curr->edge->a == curr->edge->b)) {
+		printf("examing edge %d--%d\n", curr->edge->a->value, curr->edge->b->value);
+		prev = curr;
+		*list = (*list)->next;
+		free(prev);
+		ret++;
+	}
+	while (curr != NULL) {
+		printf("examing edge %d--%d\n", curr->edge->a->value, curr->edge->b->value);
+		prev = curr;
+		prev = curr;
+		curr = curr->next;
+		if (prev->edge->a == prev->edge->b) {
+			free(prev);
+			ret++;
+		}
+	}
+
+	return ret;
+}
+
+int deleteedge(struct edge *edge, int coin) {
+	int ret = 0;
+	if (coin) {
+		struct node *tmp = edge->a;
+		edge->a = edge->b;
+		edge->b = tmp;
+	}
+
+	struct edgelist *curr;
+	struct edgelist *prev;
+
+	curr = edge->a->neigh;
+	prev = NULL;
+	while (curr != NULL) {
+		if (curr->edge->a == edge->a) {
+			curr->edge->a = edge->b;
+		} else {
+			curr->edge->b = edge->b;
+		}
+		prev = curr;
+		curr = curr->next;
+		free(prev);
+	}
+	edge->a->neigh = NULL;
+
+	ret = purgelist(&(edge->b->neigh));
+	
+	return ret;
 }
 
 int main(void) {
@@ -45,6 +121,8 @@ int main(void) {
 	ssize_t read;
 	int N = 0;
 	int M = 0;
+	time_t t;
+	srand(time(&t));
 
 	printf("mincut\n");
 	//	fp = fopen("kargerMinCut.txt", "r");
@@ -62,9 +140,8 @@ int main(void) {
 	Nodes = calloc (N+1, sizeof(struct node));
 	for (int i = 1; i <= N; i++) {
 		Nodes[i].value = i;
-		Nodes[i].edgelist = NULL;
+		Nodes[i].neigh = NULL;
 	}
-	struct edge *Edges = NULL;
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		char *pch;
@@ -77,17 +154,32 @@ int main(void) {
 			b = atoi(pch);
 			pch = strtok(NULL, " \t\n");
 //			printf("\tNieghbor: %d\n", b);
-			M += addedge(a, b, &Edges);
+			M += addneigh(a, b);
 		}
 	}
 	free(line);
 	printf("Number of edges: %d\n", M);
 
-	struct edge *current = Edges;
-	while (current) {
-		printf("Edge %d -- %d\n", current->a->value, current->b->value);
-		current = current->next;
+	int n = N;
+	int m = M;
+	while (n > 2) {
+		int target = rand()%m;
+		int coin = rand()%2;
+
+		printf("picked %2d of %2d, coin %d\n", target, m, coin);
+
+		int count = 0;
+		struct edgelist *current = Edges;
+		while (count < target) {
+			count++;
+			current = current->next;
+		}
+		m -= deleteedge(current->edge, coin);
+		printf("Remaining edges = %d\n", m);
+		n--;
 	}
+
+	printf("-- Remaining edges = %d --\n", m);
 
 	free(Nodes);
 	fclose (fp);
