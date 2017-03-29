@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 struct edgelist;
 
@@ -86,7 +87,6 @@ int purgelist(struct edgelist **list) {
 	struct edgelist *current = *list;
 
 	while (current && (current->edge->a->value == current->edge->b->value)) {
-		printf("found head as duplicate duplicate\n");
 		deleteedge(current->edge);
 		*list = current->next;
 		free(current);
@@ -177,7 +177,6 @@ int addneigh(int a, int b, struct node *nodes, struct edgelist **edges) {
 void killvictim(struct node *victim, struct node *target) {
 	struct edgelist *current = victim->neigh;
 	struct edgelist *del;
-	printf("deleting node %d\n", victim->value);
 
 	while (current) {
 		if (current->edge->a == victim) {
@@ -187,6 +186,7 @@ void killvictim(struct node *victim, struct node *target) {
 		}
 		del = current;
 		current = current->next;
+		listadd(del->edge, &(target->neigh));
 		deleteedge(del->edge);
 		free(del);
 	}
@@ -197,42 +197,21 @@ void reduceedge(struct edge *edge) {
 	struct node *victim = edge->a;
 	struct node *target = edge->b;
 
-	printlist("Target neigh before:", target->neigh);
 	killvictim(victim, target);
-	printlist("Target neigh after:", target->neigh);
 	purgelist(&(target->neigh));
 }
 
-int main(void) {
-
-	FILE *fp;
+int mincut(int N, FILE *fp) {
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read;
-	int N = 0;
 	int M = 0;
-	time_t t;
-	//	srand(time(&t));
-	srand(0);
-
-	//	sanity();
-
-	printf("mincut\n");
-	//	fp = fopen("kargerMinCut.txt", "r");
-	fp = fopen("karger_test1.txt", "r");
-	if (fp == NULL)
-		exit(EXIT_FAILURE);
-
-	while ((read = getline(&line, &len, fp)) != -1) {
-		N++;
-	}
-	printf("%d elements\n", N);
-
-	rewind(fp);
 
 	struct node *nodes = initnnodes(N);
 	struct edgelist *edges = NULL;
 	struct edge *edge = NULL;
+
+	rewind(fp);
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		char *pch;
@@ -249,28 +228,63 @@ int main(void) {
 		}
 	}
 	free(line);
-	printf("Number of edges: %d\n", M);
 
 	int n = N;
 	int m = M;
+	int ans = 0;
 	while (n > 2) {
 		int t = rand()%m;
-		printlist("Current list:", edges);
 		edge = pickedge(edges, t);
 		randomedge(edge);
-		printf("pciked edge #%d %d--%d\n", t, edge->a->value, edge->b->value);
 		reduceedge(edge);
-		printlist("After reduction:", edges);
 		m -= purgelist(&edges);
-		printlist("After purge:", edges);
-		printf("---------------Remaining edges = %d--------------\n", m);
 		n--;
 	}
-
-	printf("-- Remaining edges = %d --\n", m);
+	edge = pickedge(edges, 0);
+	reduceedge(edge);
+	purgelist(&edges);
 
 	freennodes(nodes);
+
+	return m;
+}
+
+int main(void) {
+
+	FILE *fp;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int N = 0;
+	int M = 0;
+	time_t t;
+	srand(time(&t));
+	//	srand(0);
+
+	//	sanity();
+
+	fp = fopen("kargerMinCut.txt", "r");
+	//	fp = fopen("karger_test1.txt", "r");
+	//	fp = fopen("karger_test0.txt", "r");
+	if (fp == NULL)
+		exit(EXIT_FAILURE);
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+		N++;
+	}
+
+	int minans = INT_MAX;
+	for (int i = 0; i < N; i++) {
+		int ans = mincut(N, fp);
+		if (minans > ans)
+			minans = ans;
+	}
+
+
 	fclose (fp);
+
+	printf("mincut: %d\n", minans);
+
 
 	return 0;
 }
