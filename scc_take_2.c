@@ -7,7 +7,6 @@
 struct node {
 	int value;
 	int seen;
-	int valid;
 	struct nodelist *out;
 	struct nodelist *in;
 };
@@ -20,15 +19,25 @@ struct nodelist  {
 struct node **nodes;
 
 struct node *getnode(int x) {
+	if (x < 1 || x > 875714)
+		printf("why are we running getnode on %d", x);
 	if (x > CHUNKSIZE*CHUNKSIZE) {
 		printf("input node greater than allocated chunks\n");
 		exit(EXIT_FAILURE);
 	}
+	if (nodes[x] == NULL) {
+		nodes[x] = malloc(sizeof (struct node));
+		if (nodes[x] == NULL) {
+			printf("Cannot allocate memory\n");
+			exit(EXIT_FAILURE);
+		}
+		nodes[x]->value = x;
+		nodes[x]->seen = 0;
+		nodes[x]->in = NULL;
+		nodes[x]->out = NULL;
+	}
 
-	int x_high = x / CHUNKSIZE;
-	int x_low = x % CHUNKSIZE;
-
-	return &nodes[x_high][x_low];
+	return nodes[x];
 }
 
 int sanity() {
@@ -46,6 +55,7 @@ void addnode(struct node *node, struct nodelist **list) {
 
 void deletelist(struct nodelist **neigh) {
 	struct nodelist *current;
+	struct nodelist *prev;
 	while (*neigh) {
 		current = *neigh;
 		*neigh = (*neigh)->next;
@@ -54,16 +64,11 @@ void deletelist(struct nodelist **neigh) {
 }
 
 void addneighbor(struct node *a, struct node *b) {
-	a->valid = 1;
-	b->valid = 1;
-
 	addnode(b, &(a->out));
 	addnode(a, &(b->in));
 }
 
 void dfs_rev(struct node *node, struct nodelist **allnodes) {
-	if (node->value < 1 || node->value > 875714)
-		printf("why are we running DFS on %d", node->value);
 	if (node->seen)
 		return;
 	node->seen = 1;
@@ -101,25 +106,13 @@ int main (int argc, char **argv) {
 		printf("%s\n", argv[i]);
 	}
 
-	nodes = calloc(CHUNKSIZE, sizeof(struct node *));
+	nodes = calloc(1024*1024, sizeof(struct node *));
 	if (nodes == NULL) {
 		printf("calloc faled %d\n", __LINE__);
 		exit(EXIT_FAILURE);
 	}
-	for (int i = 0; i < CHUNKSIZE; i++) {
-		nodes[i] = calloc(CHUNKSIZE, sizeof(struct node));
-		if (nodes == NULL) {
-			printf("calloc faled %d\n", __LINE__);
-			exit(EXIT_FAILURE);
-		}
-		for (int j = 0; j < CHUNKSIZE; j++) {
-			nodes[i][j].value = i*CHUNKSIZE+j;
-			nodes[i][j].seen = 0;
-			nodes[i][j].valid = 0;
-			nodes[i][j].out = NULL;
-			nodes[i][j].in = NULL;
-		}
-	}
+	for (int i = 0; i < 1024*1024; i++)
+		nodes[i] = NULL;
 
 	FILE *fp;
 	char *line = NULL;
@@ -127,6 +120,7 @@ int main (int argc, char **argv) {
 	ssize_t read;
 
 	fp = fopen("SCC.txt", "r");
+	//	fp = fopen("scc_1.txt", "r");
 	perror("fopen");
 
 	//	while ((read = getline(&line, &len, fp)) != -1) {
@@ -138,32 +132,47 @@ int main (int argc, char **argv) {
 	fclose (fp);
 
 	// GREV
-	struct nodelist *allnodes;
-	for (int i = 0; i < CHUNKSIZE; i++) {
-		for (int j = 0; j < CHUNKSIZE; j++) {
-			struct node *node = &nodes[i][j];
-			if (node->valid)
-				dfs_rev(node, &allnodes);
-		}
+	struct nodelist *allnodes = NULL;
+	for (int i = 1; i < CHUNKSIZE*CHUNKSIZE; i++) {
+		struct node *node = nodes[i];
+		if (node)
+			dfs_rev(node, &allnodes);
 	}
 	printf("DFS_rev completed\n");
 
 	struct nodelist *current = allnodes;
 	int count = 0;
+
+	int maxes[6] = {0, 0, 0, 0, 0, 0};
+
 	while (current) {
 		count = dfs(current->node, current->node->value);
-		printf("SCC size: %d\n", count);
+		maxes[5] = count;
+		for (int x = 4, y = 5; x >= 0; x--, y--) {
+			if (maxes[y] > maxes[x]) {
+				int tmp = maxes[y];
+				maxes[y] = maxes[x];
+				maxes[x] = tmp;
+			} else
+				break;
+		}
 		current = current->next;
 	}
+
+	for (int x = 0; x < 5; x++) {
+		printf("%d, ", maxes[x]);
+	}
+	printf("\n");
 	printf("DFS completed\n");
 	
-	for (int i = 0; i < CHUNKSIZE; i++) {
-		for (int j = 0; j < CHUNKSIZE; j++) {
-			deletelist(&(nodes[i][j].out));
-			deletelist(&(nodes[i][j].in));
-		}	
-		free(nodes[i]);
-	}	
+	deletelist(&allnodes);
+	for (int i = 0; i < 1024*1024; i++) {
+		if (nodes[i]) {
+			deletelist(&(nodes[i]->out));
+			deletelist(&(nodes[i]->in));
+			free(nodes[i]);
+		}
+	}
 	free(nodes);
 
 	return 0;
