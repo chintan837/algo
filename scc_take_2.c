@@ -62,6 +62,8 @@ void addneighbor(struct node *a, struct node *b) {
 }
 
 void dfs_rev(struct node *node, struct nodelist **allnodes) {
+	if (node->value < 1 || node->value > 875714)
+		printf("why are we running DFS on %d", node->value);
 	if (node->seen)
 		return;
 	node->seen = 1;
@@ -142,7 +144,7 @@ int main (int argc, char **argv) {
 			struct node *node = &nodes[i][j];
 			if (node->valid)
 				dfs_rev(node, &allnodes);
-		}	
+		}
 	}
 	printf("DFS_rev completed\n");
 
