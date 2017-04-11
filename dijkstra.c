@@ -2,6 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct node {
+	int value;
+	struct edgelist;
+}
+
+struct edgelist {
+	struct node *node;
+	int len;
+}
+
+addedge(int s, int t, int len) {
+
+}
+
 int main(int argc, char *argv[]) {
 	for (int i = 0; i < argc; i++) {
 		printf("%s\n", argv[i]);
@@ -18,15 +32,20 @@ int main(int argc, char *argv[]) {
 	while ((read = getline(&line, &len, fp)) != -1) {
 		token = strtok(line, "\t");
 		s = atoi(token);
-		printf("%d\n", s);
-		while (token = strtok(NULL, ",")){
-			//	t = atoi(token);
-			printf("\t%s", token);
-			token = strtok(NULL, "\t\n");
-			//	len = atoi(token);
-			printf(" (%s)\n", token);
+		int flag = 1;
+		while (token = strtok(NULL, ",\t\n")){
+			if (flag) {
+				t = atoi(token);
+				flag = 0;
+			} else {
+				len = atoi(token);
+				flag = 1;
+				addedge(s, t, len);
+			}
 		}
 	}
+
+
 
 	fclose(fp);
 	free(line);
