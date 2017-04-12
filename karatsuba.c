@@ -162,8 +162,10 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 	int *apbcpd = calloc((len+1)*2, sizeof(int));
 
 	ctx += multiply(ctx, &(num1[len/2]), &(num2[len/2]), len/2, ac);
+	printf("new ctx: %d\n", ctx);
 	printnum("ac", myctx, ac , len);
 	ctx += multiply(ctx, &(num1[0]), &(num2[0]), len/2, bd);
+	printf("new ctx: %d\n", ctx);
 	printnum("bd", myctx, bd , len);
 
 	// calculate (a+b)
@@ -177,6 +179,7 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 		l++;
 	//	printf("%d new l = %d\n", myctx, l);
 	ctx += multiply(ctx, apb, cpd, l, apbcpd);
+	printf("new ctx: %d\n", ctx);
 	printnum("apbcpd", myctx, apbcpd, len*2);
 
 	// calculate (3)-(2)-(1)
@@ -221,12 +224,12 @@ int multiply(int ctx, int *num1, int *num2, int len, int *prod) {
 int main() {
 	printf("karatsub multiplications\n");
 
-	const char *num1 = "3141592653589793238462643383279502884197169399375105820974944592";
-	const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
+//		const char *num1 = "3141592653589793238462643383279502884197169399375105820974944592";
+//		const char *num2 = "2718281828459045235360287471352662497757247093699959574966967627";
 //		const char *num1 = "1234567887654321";
 //		const char *num2 = "1234567887654321";
-	//	const char *num1 = "5678";
-	//	const char *num2 = "1234";
+	const char *num1 = "5678";
+	const char *num2 = "1234";
 	//	const char *num1 = "12345678";
 	//	const char *num2 = "12345678";
 	//	const char *num1 = "99";
