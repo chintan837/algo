@@ -21,6 +21,29 @@ struct edgelist {
 
 struct node *nodes;
 
+int heap_add(struct edge *edge, int distance, struct edge **heap, int heap_len) {
+	printf("Adding edge %d with weight %d+%d\n", edge->node->value, edge->len, distance);
+	
+	edge->len += distance;
+	heap[heap_len] = edge;
+
+	/* buble up */
+
+	return ++heap_len;
+}
+
+int node_add(struct node *node, struct edge **heap, int heap_len) {
+	struct edgelist *current = node->edges;
+	printf("Adding node %d to {Found nodes}\n", node->value);
+	while (current) {
+		heap_len = heap_add(current->edge, node->distance, heap, heap_len);
+
+		current = current->next;
+	}
+
+	return heap_len;
+}
+
 void addedge(int s, int t, int len) {
 	struct node *source = &nodes[s];
 	struct node *target = &nodes[t];
@@ -58,6 +81,7 @@ int main(int argc, char *argv[]) {
 	char *ptr;
 	char *token;
 	int s = 0, t = 0, w = 0;
+	int M = 0;
 
 	nodes = calloc(200+1, sizeof(struct node));
 	for (int i = 1; i <= 200; i++) {
@@ -78,12 +102,35 @@ int main(int argc, char *argv[]) {
 				w = atoi(token);
 				flag = 1;
 				addedge(s, t, w);
+				M++;
 			}
 		}
 	}
-
-	print_graph(nodes);
-
 	fclose(fp);
 	free(line);
+
+	//	print_graph(nodes);
+
+	/* Dijkstra on node 1 */
+	printf("Number of edges: %d\n", M);	
+	struct edge **heap = calloc(M, sizeof(struct edge *));
+	int heap_len = 0;
+
+	nodes[1].distance = 0;
+	heap_len = node_add(&nodes[1], heap, heap_len);
+
+	printf("%d nodes added\n", heap_len);
+
+	for (int i = 1; i <= 200; i++) {
+		struct edgelist *current = nodes[i].edges;
+		struct edgelist *prev;
+		while (current) {
+			free(current->edge);
+			prev = current;
+			current = current->next;
+			free(prev);
+		}
+	}
+	free(nodes);
+
 }
