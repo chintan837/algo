@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 struct node {
 	int value;
 	int distance;
-	struct edgelist *edgelist;
+	struct edgelist *edges;
 };
 
 struct edge {
@@ -18,8 +19,31 @@ struct edgelist {
 	struct edgelist *next;
 };
 
-addedge(int s, int t, int len) {
-	printf("Adding edge %d -- %d (%d)\n", s, t, len);
+struct node *nodes;
+
+void addedge(int s, int t, int len) {
+	struct node *source = &nodes[s];
+	struct node *target = &nodes[t];
+
+	struct edge *newedge = malloc(sizeof(struct edge));
+	newedge->node = target;
+	newedge->len = len;
+
+	struct edgelist *newedgelist = malloc(sizeof(struct edgelist));
+	newedgelist->edge = newedge;
+	newedgelist->next = source->edges;
+	source->edges = newedgelist;
+}
+
+void print_graph(struct node *nodes) {
+	for (int i = 1; i <= 200; i++) {
+		printf("%d", nodes[i].value);
+		struct edgelist *current = nodes[i].edges;
+		while (current) {
+			printf("\t%d (%d)\n", current->edge->node->value, current->edge->len);
+			current = current->next;
+		}
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -34,6 +58,13 @@ int main(int argc, char *argv[]) {
 	char *ptr;
 	char *token;
 	int s = 0, t = 0, w = 0;
+
+	nodes = calloc(200+1, sizeof(struct node));
+	for (int i = 1; i <= 200; i++) {
+		nodes[i].value = i;
+		nodes[i].distance = INT_MAX;
+		nodes[i].edges = NULL;
+	}
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		token = strtok(line, "\t");
@@ -50,6 +81,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+
+	print_graph(nodes);
 
 	fclose(fp);
 	free(line);
