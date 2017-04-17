@@ -49,6 +49,26 @@ int heap_add(int **heap, int heap_len, int *p) {
 	return heap_len;
 }
 
+void bubble_down(int **heap, int len, int parent) {
+	int child = parent*2;
+	if (child > len) {
+		return;
+	}
+	assert(child <= LEN);
+	if (*heap[parent] > *heap[child]) {
+		swapp(&heap[parent], &heap[child]);
+		bubble_down(heap, len, child);
+	}
+
+	child = parent*2+1;
+	if (child > len)
+		return;
+	if (*heap[parent] > *heap[child]) {
+		swapp(&heap[parent], &heap[child]);
+		bubble_down(heap, len, child);
+	}
+}
+
 int *get_min(int **heap, int *len) {
 	int heap_len = *len;
 	if (heap_len == 0)
@@ -59,6 +79,7 @@ int *get_min(int **heap, int *len) {
 	--*len;
 
 	/* bubble down */
+	bubble_down(heap, *len, 1);
 
 	return ret;
 }
