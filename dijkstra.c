@@ -2,10 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <assert.h>
+
+#define FINAL
 
 struct node {
 	int value;
 	int distance;
+	int seen;
 	struct edgelist *edges;
 };
 
@@ -21,24 +25,76 @@ struct edgelist {
 
 struct node *nodes;
 
-int heap_add(struct edge *edge, int distance, struct edge **heap, int heap_len) {
-	printf("Adding edge %d with weight %d+%d\n", edge->node->value, edge->len, distance);
+void swapp(struct edge **a, struct edge **b) {
+	struct edge *tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+
+void bubble_down(struct edge **heap, int len, int parent) {
+	for (int child = parent * 2; child <= (parent*2+1); child++) {
+		if (child > len)
+			return;
+
+		if (heap[child]->len < heap[parent]->len) {
+			swapp(&heap[child], &heap[parent]);
+			bubble_down(heap, len, child);
+		}
+	}
+}
+
+struct edge *get_min(struct edge **heap, int *len) {
+	if (*len < 1) 
+		return NULL;
+	struct edge *c = heap[1];
 	
+	swapp(&heap[1], &heap[*len]);
+	--*len;
+
+	bubble_down(heap, *len, 1);
+
+	return c;
+}
+
+void bubble_up(struct edge **heap, int heap_len, int child) {
+	if (child <= 1) 
+		return;
+
+	int parent = child/2;
+
+	//	printf("%s - %d[%d](parent) and %d[%d](child)\n", __func__, heap[parent]->len, parent, heap[child]->len, child);
+	if (heap[parent]->len > heap[child]->len) {
+		swapp(&heap[child], &heap[parent]);
+		//	printf("swapped\n");
+		bubble_up(heap, heap_len, parent);
+	}
+}
+
+int heap_add(struct edge *edge, int distance, struct edge **heap, int heap_len) {
+	heap_len++;
+	//	printf("Adding edge %d with weight %d+%d at index %d\n", edge->node->value, edge->len, distance, heap_len);
 	edge->len += distance;
 	heap[heap_len] = edge;
 
 	/* buble up */
+	bubble_up(heap, heap_len, heap_len);
 
-	return ++heap_len;
+	return heap_len;
 }
 
 int node_add(struct node *node, struct edge **heap, int heap_len) {
 	struct edgelist *current = node->edges;
-	printf("Adding node %d to {Found nodes}\n", node->value);
+	//	printf("Adding node %d to {Found nodes}\n", node->value);
 	while (current) {
-		heap_len = heap_add(current->edge, node->distance, heap, heap_len);
-
+		if (current->edge->node->distance == INT_MAX)
+			heap_len = heap_add(current->edge, node->distance, heap, heap_len);
 		current = current->next;
+#ifndef FINAL 
+		printf("heap: %d\n", heap_len);
+		for (int i = 1; i <= heap_len; i++) {
+			printf("\t%d[%d]\n", heap[i]->node->value, heap[i]->len);
+		}
+#endif
 	}
 
 	return heap_len;
@@ -86,7 +142,8 @@ int main(int argc, char *argv[]) {
 	nodes = calloc(200+1, sizeof(struct node));
 	for (int i = 1; i <= 200; i++) {
 		nodes[i].value = i;
-		nodes[i].distance = INT_MAX;
+		nodes[i].distance = INT_MAX; /*distance from node 1 */
+		nodes[i].seen = 0;
 		nodes[i].edges = NULL;
 	}
 
@@ -113,13 +170,42 @@ int main(int argc, char *argv[]) {
 
 	/* Dijkstra on node 1 */
 	printf("Number of edges: %d\n", M);	
-	struct edge **heap = calloc(M, sizeof(struct edge *));
+	struct edge **heap = calloc(M+1, sizeof(struct edge *));
 	int heap_len = 0;
 
 	nodes[1].distance = 0;
 	heap_len = node_add(&nodes[1], heap, heap_len);
+	int answer[201];
 
-	printf("%d nodes added\n", heap_len);
+	struct edge *c; 
+	while ((c = get_min(heap, &heap_len))) {
+		if (c->node->seen)
+			continue;
+		c->node->distance = c->len;
+		//	printf("Retrieved edge: %d %d %d\n", c->node->value, c->len, c->node->distance);
+		c->node->seen = 1;
+		answer[c->node->value] = c->len;
+		heap_len = node_add(c->node, heap, heap_len);
+	}
+
+	for (int i = 1; i <= 200; i++) {
+		switch (i) {
+			case 7:
+			case 37:
+			case 59:
+			case 82:
+			case 99:
+			case 115:
+			case 133:
+			case 165:
+			case 188:
+			case 197:
+				printf("%d,", answer[i]);
+			default:
+				continue;
+		}
+		printf("\n");
+	}
 
 	for (int i = 1; i <= 200; i++) {
 		struct edgelist *current = nodes[i].edges;
@@ -132,5 +218,5 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	free(nodes);
-
+	free(heap);
 }
