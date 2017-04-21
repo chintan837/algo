@@ -113,7 +113,7 @@ int get_min(int *heap, int *len) {
 }
 
 int main(int argc, char *argv[]) {
-	FILE *fp = fopen("median.txt", "r");
+	FILE *fp = fopen("Median.txt", "r");
 	char *line;
 	ssize_t read;
 	size_t len;
@@ -125,20 +125,38 @@ int main(int argc, char *argv[]) {
 	int min_len = 0;
 	int max_len = 0;
 	int i = 1;
-	long long median;
+	long long median = 0;
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		sscanf(line, "%d", &n);
+		printf("----- processing %d -------\n", n);
+		if (n < peek(maxheap, max_len)) {
+			printf("adding %d to maxheap\n", n);
+			max_len = add_max(maxheap, max_len, n);
 
-		if (n < peek(maxheap, max_len)) 
+			if (max_len - min_len >= 2) {
+				n = get_max(maxheap, &max_len);
+				min_len = add_min(minheap, min_len, n);
+			}
+			
+			//	print_heap("Current max: ", maxheap, max_len);
+			//	print_heap("Current min: ", minheap, min_len);
+		} else {
+			printf("adding %d to min_heap\n", n);
+			min_len = add_min(minheap, min_len, n);
 
+			if (min_len > max_len) {
+				n = get_min(minheap, &min_len);
+				max_len = add_max(maxheap, max_len, n);
+			}
+			
+			//	print_heap("Current max: ", maxheap, max_len);
+			//	print_heap("Current min: ", minheap, min_len);
+		}
 
-		
-		min_len = add_min(minheap, min_len, n);
-		max_len = add_max(maxheap, max_len, n);
-
-		printf("median: %lld\n", median);
+		median += peek(maxheap, max_len);
 	}
+	printf("median: %lld\n", median);
 
 	free(line);
 	free(minheap);
