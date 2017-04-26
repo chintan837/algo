@@ -23,6 +23,41 @@
 #include <stdlib.h>
 #include <limits.h>
 
+struct bst {
+	int data;
+	struct bst *left;
+	struct bst *right;
+};
+
+struct bst *_bst_insert(struct bst *data, struct bst *root) {
+	if (root == NULL)
+		return data;
+
+	if (root->data > data->data) {
+		root->left = _bst_insert(data, root->left);
+		return root->left;
+	}
+	else {
+		root->right = _bst_insert(data, root->right);
+		return root->right;
+	}
+}
+
+struct bst *bst_insert(int data, struct bst *root) {
+	struct bst *newnode = malloc(sizeof(struct bst));
+
+	newnode->data = data;
+	newnode->left = NULL;
+	newnode->right = NULL;
+
+	return _bst_insert(newnode, root);
+}
+
+int bst_search(int data) {
+	
+	return 0;
+}
+
 int main(int argc, char *argv[]) {
 	for (int i = 0; i < argc; i++)
 		printf("%s ", argv[i]);
@@ -32,12 +67,17 @@ int main(int argc, char *argv[]) {
 	size_t read;
 	ssize_t len;
 	int num = 0;
+	int count = 0;
+	struct bst *btree = NULL;
 	fp = fopen("algo1-programming_prob-2sum.txt", "r");
 
 	while((len = getline(&line, &read, fp)) != -1) {
 		sscanf(line, "%d\n", &num);
-		printf("%d\n", num);
+		btree = bst_insert(num, btree);
+		count++;
 	}
+
+	printf("\n# of objects n: %d\n", count);
 
 	fclose (fp);
 	return 0;
