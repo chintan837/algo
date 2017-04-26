@@ -29,33 +29,48 @@ struct bst {
 	struct bst *right;
 };
 
-struct bst *_bst_insert(struct bst *data, struct bst *root) {
-	if (root == NULL)
-		return data;
-
-	if (root->data > data->data) {
-		root->left = _bst_insert(data, root->left);
-		return root->left;
-	}
-	else {
-		root->right = _bst_insert(data, root->right);
-		return root->right;
-	}
-}
-
 struct bst *bst_insert(int data, struct bst *root) {
-	struct bst *newnode = malloc(sizeof(struct bst));
+	if (root == NULL) {
+		struct bst *newnode = malloc(sizeof(struct bst));
 
-	newnode->data = data;
-	newnode->left = NULL;
-	newnode->right = NULL;
+		newnode->data = data;
+		newnode->left = NULL;
+		newnode->right = NULL;
+		return newnode;
+	}
 
-	return _bst_insert(newnode, root);
+	if (data < root->data)
+		root->left = bst_insert(data, root->left);
+	else
+		root->right = bst_insert(data, root->right);
+	
+	return root;
 }
 
-int bst_search(int data) {
-	
-	return 0;
+int bst_search(int data, struct bst *root) {
+	if (root == NULL)
+		return 0;
+
+	if (data == root->data)
+		return 1;
+
+	if (data < root->data) {
+		return bst_search(data, root->left);
+	}
+	else
+		return bst_search(data, root->right);
+}
+
+void bst_destroy(struct bst *root) {
+	if (root == NULL)
+		return;
+
+	if (root->left)
+		bst_destroy(root->left);
+	if (root->right)
+		bst_destroy(root->right);
+
+	free(root);
 }
 
 int main(int argc, char *argv[]) {
@@ -66,19 +81,28 @@ int main(int argc, char *argv[]) {
 	char *line;
 	size_t read;
 	ssize_t len;
-	int num = 0;
+	long int num = 0;
 	int count = 0;
 	struct bst *btree = NULL;
 	fp = fopen("algo1-programming_prob-2sum.txt", "r");
 
 	while((len = getline(&line, &read, fp)) != -1) {
-		sscanf(line, "%d\n", &num);
+		sscanf(line, "%ld\n", &num);
 		btree = bst_insert(num, btree);
 		count++;
 	}
 
 	printf("\n# of objects n: %d\n", count);
 
+	while ((scanf("%ld", &num) == 1)) {
+		printf("Enter number to search: (any other key to quit)");
+		if (bst_search(num, btree))
+			printf("%ld found\n", num);
+		else
+			printf("%ld not found\n", num);
+	}
+
+	bst_destroy(btree);
 	fclose (fp);
 	return 0;
 }
