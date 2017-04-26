@@ -78,9 +78,9 @@ int main(int argc, char *argv[]) {
 		printf("%s ", argv[i]);
 
 	FILE *fp;
-	char *line;
-	size_t read;
-	ssize_t len;
+	char *line = NULL;
+	size_t read = 0;
+	ssize_t len = -1;
 	long int num = 0;
 	int count = 0;
 	struct bst *btree = NULL;
@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	bst_destroy(btree);
+	free(line);
 	fclose (fp);
 	return 0;
 }
