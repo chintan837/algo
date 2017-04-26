@@ -23,6 +23,15 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#define P1 -10000
+#define P2	10000
+
+#define T11 3
+#define T12 10
+
+#define T21 0
+#define T22 4
+
 struct bst {
 	int data;
 	struct bst *left;
@@ -85,6 +94,10 @@ void bst_destroy(struct bst *root) {
 	free(root);
 }
 
+void qsort(long int *array, int l, int r) {
+	
+}
+
 int main(int argc, char *argv[]) {
 	for (int i = 0; i < argc; i++)
 		printf("%s ", argv[i]);
@@ -96,19 +109,24 @@ int main(int argc, char *argv[]) {
 	long int num = 0;
 	long int array[1000000];
 	int count = 0;
+	int N = 0;
 	struct bst *btree = NULL;
 	fp = fopen("algo1-programming_prob-2sum.txt", "r");
+	fclose(fp);
+	fp = fopen("2sum_2.test", "r");
 
 	while((len = getline(&line, &read, fp)) != -1) {
 		sscanf(line, "%ld\n", &num);
-		array[count] = num;
+		array[N] = num;
 		btree = bst_insert(num, btree);
-		count++;
+		N++;
 	}
 
-	printf("\n# of objects n: %d\n", count);
+	printf("\n# of objects n: %d\n", N);
 	int height = bst_height(btree);
 	printf("Height of the btree: %d\n", height);
+
+	qsort(array, 0, N-1);
 
 #if 0
 	while ((scanf("%ld", &num) == 1)) {
@@ -122,17 +140,20 @@ int main(int argc, char *argv[]) {
 
 	count = 0;
 	long int x, y;
-	for (int t = -10000; t <= 10000; t++) {
-		for (int i = 0; i < 1000000; i++) {
+	for (int t = T11; t <= T12; t++) {
+		for (int i = 0; i < N; i++) {
 			x = array[i];
 			y = t - x;
-			if (x == y)
+			if (x == y) {
+				printf("x: %ld, y: %ld, continuing\n", x, y);
 				continue;
+			}
 			if (bst_search(y, btree)) {
 				printf("Found sum t: %d with x: %ld and y:%ld\n", t, x, y);
 				count++;
 				break;
-			}
+			} else
+				printf("did not find y: %ld for x: %ld and t:%d\n", y, x, t);
 		}
 	}
 	printf("Number of unique t's: %d\n", count);
