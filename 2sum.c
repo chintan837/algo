@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <assert.h>
 
 #define P1 -10000
 #define P2	10000
@@ -33,7 +34,7 @@
 #define T22 4
 
 struct bst {
-	int data;
+	long int data;
 	struct bst *left;
 	struct bst *right;
 };
@@ -50,7 +51,7 @@ int bst_height(struct bst *root) {
 	return ret+1;
 }
 
-struct bst *bst_insert(int data, struct bst *root) {
+struct bst *bst_insert(long int data, struct bst *root) {
 	if (root == NULL) {
 		struct bst *newnode = malloc(sizeof(struct bst));
 
@@ -68,7 +69,7 @@ struct bst *bst_insert(int data, struct bst *root) {
 	return root;
 }
 
-int bst_search(int data, struct bst *root) {
+int bst_search(long int data, struct bst *root) {
 	if (root == NULL)
 		return 0;
 
@@ -94,8 +95,38 @@ void bst_destroy(struct bst *root) {
 	free(root);
 }
 
-void qsort(long int *array, int l, int r) {
-	
+static int compare(const void *p1, const void *p2)
+{
+	long int left = *(const	long int *)p1;
+	long int right = *(const long int *)p2;
+
+	return ((left > right) - (left < right));
+}
+
+int b_search(long int target, long int* array, int l, int r) {
+	if (l > r)
+		return 0;
+
+	int m = l + (r-l)/2;
+	//	printf("Finding %ld in range [%d, %d, %d]\n", target, l, m, r);
+	if (l == r) {
+		if (target == array[l]) 
+			return 1;
+		else {
+			return 0;
+		}
+	}
+
+	if (target < array[m]) {
+		//	printf("%ld < %ld[%d], going left\n", target, array[m], m);
+		return b_search(target, array, l, m-1);
+	}
+	else if (target > array[m]) {
+		//	printf("%ld > %ld[%d], going right\n", target, array[m], m);
+		return b_search(target, array, m+1, r); 
+	} else {
+		return 1;
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -112,8 +143,8 @@ int main(int argc, char *argv[]) {
 	int N = 0;
 	struct bst *btree = NULL;
 	fp = fopen("algo1-programming_prob-2sum.txt", "r");
-	fclose(fp);
-	fp = fopen("2sum_2.test", "r");
+	// fclose(fp);
+	// fp = fopen("2sum_2.test", "r");
 
 	while((len = getline(&line, &read, fp)) != -1) {
 		sscanf(line, "%ld\n", &num);
@@ -126,12 +157,22 @@ int main(int argc, char *argv[]) {
 	int height = bst_height(btree);
 	printf("Height of the btree: %d\n", height);
 
-	qsort(array, 0, N-1);
-
+#if 0	
+	/* sanity of search data structrue */
+	qsort(array, N, sizeof(long int), compare);
+	printf("sorting complete\n");
+	for (int i = 0; i < N; i++) {
+		asser(b_search(array[i], array, 0, N-1));
+	}
+#endif 
+	for (int i = 0; i < N; i++) {
+		assert(bst_search(array[i], btree));
+	}
+	printf("sanity complete\n");
 #if 0
 	while ((scanf("%ld", &num) == 1)) {
 		printf("Enter number to search (any other key to quit): ");
-		if (bst_search(num, btree))
+		if (b_search(num, array, 0, N-1))
 			printf("%ld found\n", num);
 		else
 			printf("%ld not found\n", num);
@@ -140,20 +181,22 @@ int main(int argc, char *argv[]) {
 
 	count = 0;
 	long int x, y;
-	for (int t = T11; t <= T12; t++) {
+	for (int t = P1; t <= P2; t++) {
 		for (int i = 0; i < N; i++) {
 			x = array[i];
 			y = t - x;
 			if (x == y) {
-				printf("x: %ld, y: %ld, continuing\n", x, y);
+				//	printf("x: %ld, y: %ld, continuing\n", x, y);
 				continue;
 			}
 			if (bst_search(y, btree)) {
+			//	if (b_search(y, array, 0, N-1)) {
 				printf("Found sum t: %d with x: %ld and y:%ld\n", t, x, y);
 				count++;
 				break;
-			} else
-				printf("did not find y: %ld for x: %ld and t:%d\n", y, x, t);
+			} else {
+				//	printf("did not find y: %ld for x: %ld and t:%d\n", y, x, t);
+			}
 		}
 	}
 	printf("Number of unique t's: %d\n", count);
