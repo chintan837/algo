@@ -131,6 +131,9 @@ int b_search(long int target, long int* array, int l, int r) {
 
 int skipped_search = 0;
 int search_count = 0;
+int total_hits = 0;
+int unique_hits = 0;
+
 int b_index(long int target, long int *array, int l, int r) {
 	if (target <= array[l]) {
 		return l;
@@ -206,9 +209,12 @@ int main(int argc, char *argv[]) {
 	}
 #endif
 
-	count = 0;
+	unique_hits = 0;
+	total_hits = 0;
 	long int x, y;
 	long int t;
+	int skipped_search = 0;
+	int total_search = 0;
 	// range of [-1,1] will have	-1, 0, 1 as indexes.
 	// size is 2, this will map to	 0, 1, 2 
 	// so calloc size is - (P2-P1+1)+1
@@ -223,18 +229,23 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		int j = b_index(y, array, 0, N-1);
+		total_search++;
+		if (j == 0 || j== N-1) {
+			skipped_search++;
+		}
 		//	printf("[%d]\n", j);
 		t = array[i]+array[j];
 		while (t <= P2 && t >= P1) {
 			//	printf("\tFound t: %ld\n", array[i]+array[j]);
 			ans[(array[i]+array[j]+P2)] = 1;
+			total_hits++;
 			j++;
 			t = array[i]+array[j];
 		}
 	}
 	for (int i = P1; i <= P2; i++) {
 		if (ans[i+P2])
-			count++;
+			unique_hits++;
 	}
 #if 0
 	for (int t = P1; t <= P2; t++) {
@@ -256,7 +267,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 #endif
-	printf("Number of unique t's: %d\n", count);
+	printf("Number of unique t's: %d\n", unique_hits);
+	printf("Skipped search: %d, total search: %d, percent %f%%\n", skipped_search, total_search,
+													(double) skipped_search/total_search*100);
+	printf("Total hits:%d Unique hits: %d\n", total_hits, unique_hits);
 
 	bst_destroy(btree);
 	free(line);
