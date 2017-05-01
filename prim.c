@@ -54,11 +54,13 @@ struct neighlist {
 	nlist_t *next;
 };
 
+
+
 static inline void bubble_up() {
 
 }
 
-static void heap_insert() {
+static void heap_insert(node_t *heap, node_t *node, int len) {
 
 }
 
@@ -66,8 +68,10 @@ static inline void bubble_down() {
 
 }
 
-static node_t *heap_extract_min() {
-
+static node_t *heap_extract_min(node_t *heap, int *len) {
+	if (*len == 0)
+		return NULL;
+	node_t *ret = heap[]
 }
 
 static void add_neigh(node_t *n1, node_t *n2, int cost) {
@@ -107,9 +111,22 @@ int main() {
 	}
 
 	long int sum = 0;
-	nodes[1].key = 
+	int length = N;
+	node_t *node;
+	nlist_t *current;
+	nodes[1].key = 0;
+	while (node = heap_extract_min(nodes, &length)) {
+		current = node->neigh;
+		while(current) {
+			edge_t *edge = current->edge;
+			if (edge->node->key > edge->cost) {
+				edge->node->key = edge->cost;
+				// update node edge->node;
 
-
+			}
+			current = current->next;
+		}
+	}
 
 	fclose(fp);
 	return 0;
