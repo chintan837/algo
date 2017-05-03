@@ -42,6 +42,7 @@ typedef struct node {
 	int index;
 	int key;
 	nlist_t *neigh;
+	int nn;
 } node_t;
 
 typedef struct edge {
@@ -54,24 +55,66 @@ struct neighlist {
 	nlist_t *next;
 };
 
-
-
-static inline void bubble_up() {
-
+static void
+print_heap(const char *label, node_t **heap, int len) {
+	printf("    %s\n", label);
+	for (int i = 1; i <= len; i++) {
+		node_t *node = heap[i];
+		printf("\tIndex: %d, value: %d, node_index: %d, key: %d\n",
+				i, node->value, node->index, node->key);
+	}
 }
 
-static void heap_insert(node_t *heap, node_t *node, int len) {
+static inline void swapp(node_t **p1, node_t **p2) {
+	node_t *tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
 
+	int t = (*p1)->index;
+	(*p1)->index = (*p2)->index;
+	(*p2)->index = t;
 }
 
-static inline void bubble_down() {
-
+static inline void bubble_up(node_t **heap, int child) {
+	if (child <= 1)
+		return;
+	int parent = child/2;
+	if (heap[parent]->key > heap[child]->key) {
+		swapp(&heap[parent], &heap[child]);
+		bubble_up(heap, parent);
+	}
 }
 
-static node_t *heap_extract_min(node_t *heap, int *len) {
-	if (*len == 0)
+static int heap_insert(node_t **heap, node_t *node, int len) {
+	len++;
+	heap[len] = node;
+	heap[len]->index = len;
+
+	bubble_up(heap, len);
+
+	return len;
+}
+
+static inline void bubble_down(node_t **heap, int parent, int len) {
+	for (int child = parent*2; child <= parent*2+1; child++) {
+		if (child > len)
+			return;
+		if (heap[parent]->key > heap[child]->key) {
+			swapp(&heap[parent], &heap[child]);
+			bubble_down(heap, child, len);
+		}
+	}
+}
+
+static node_t *heap_extract_min(node_t **heap, int *len) {
+	if (*len <= 0)
 		return NULL;
-	node_t *ret = heap[]
+
+	swapp(&heap[1], &heap[*len]);
+	(*len)--;
+	bubble_down(heap, 1, *len);
+
+	return heap[(*len)+1];
 }
 
 static void add_neigh(node_t *n1, node_t *n2, int cost) {
@@ -83,10 +126,12 @@ static void add_neigh(node_t *n1, node_t *n2, int cost) {
 	newlistitem->edge = newedge;
 	newlistitem->next = n1->neigh;
 	n1->neigh = newlistitem;
+	n1->nn++;
 }
 
 int main() {
-	FILE *fp = fopen("edges.txt", "r");
+	//	FILE *fp = fopen("edges.txt", "r");
+	FILE *fp = fopen("prim_tc1", "r");
 	char *line = NULL;
 	size_t len;
 	ssize_t read;
@@ -96,37 +141,52 @@ int main() {
 	read = getline(&line, &len, fp);
 	sscanf(line, "%d %d", &N, &M);
 	printf("N: %d, M: %d\n", N, M);
-	node_t *nodes = calloc(N+1, sizeof(node_t));
+	node_t **nodes = calloc(N+1, sizeof(node_t *));
 	for (int i = 0; i <= N; i++) {
-		nodes[i].value = i;
-		nodes[i].index = i;
-		nodes[i].key = INT_MAX;
-		nodes[i].neigh = NULL;
+		nodes[i] = malloc (sizeof(node_t));
+		nodes[i]->value = i;
+		nodes[i]->index = i;
+		nodes[i]->key = INT_MAX;
+		nodes[i]->neigh = NULL;
+		nodes[i]->nn = 0;
 	}
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		sscanf(line, "%d %d %d", 	&n1, &n2, &cost);
-		add_neigh(&nodes[n1], &nodes[n2], cost);
-		add_neigh(&nodes[n2], &nodes[n1], cost);
+		add_neigh(nodes[n1], nodes[n2], cost);
+		add_neigh(nodes[n2], nodes[n1], cost);
 	}
 
 	long int sum = 0;
-	int length = N;
+	int heap_len = N;
 	node_t *node;
 	nlist_t *current;
-	nodes[1].key = 0;
-	while (node = heap_extract_min(nodes, &length)) {
+	nodes[1]->key = 0;
+	print_heap("Current heap", nodes, heap_len);
+	while (node = heap_extract_min(nodes, &heap_len)) {
+		printf("Extracted node :%d, edge cost: %d\n", node->value, node->key);
+		print_heap("After extraction:", nodes, heap_len);
+		sum += node->key;
+		// node->index = INT_MAX;
 		current = node->neigh;
 		while(current) {
 			edge_t *edge = current->edge;
-			if (edge->node->key > edge->cost) {
-				edge->node->key = edge->cost;
-				// update node edge->node;
-
-			}
+			if (edge->node->index < heap_len)
+				if (edge->node->key > edge->cost) {
+					edge->node->key = edge->cost;
+					printf("    Updated edge cost for Node %d to %d\n", edge->node->value, edge->node->key);
+					// asssuming cost of key only go down, bubbl_up() should take care
+					bubble_up(nodes, edge->node->index);
+					print_heap("After updatexs:", nodes, heap_len);
+				}
+				else
+					printf("    skipping %d\n", edge->node->value);
 			current = current->next;
 		}
+		print_heap("After updates:", nodes, heap_len);
+		printf("--------------------------------\n");
 	}
+	printf("Total sum: %ld\n", sum);
 
 	fclose(fp);
 	return 0;
