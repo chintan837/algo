@@ -42,7 +42,6 @@ typedef struct node {
 	int index;
 	int key;
 	nlist_t *neigh;
-	int nn;
 } node_t;
 
 typedef struct edge {
@@ -133,7 +132,6 @@ static void add_neigh(node_t *n1, node_t *n2, int cost) {
 	newlistitem->edge = newedge;
 	newlistitem->next = n1->neigh;
 	n1->neigh = newlistitem;
-	n1->nn++;
 }
 
 int main() {
@@ -155,7 +153,6 @@ int main() {
 		nodes[i]->index = i;
 		nodes[i]->key = INT_MAX;
 		nodes[i]->neigh = NULL;
-		nodes[i]->nn = 0;
 	}
 
 	while ((read = getline(&line, &len, fp)) != -1) {
@@ -167,36 +164,20 @@ int main() {
 	long int sum = 0;
 	int heap_len = N;
 	node_t *node;
-	nlist_t *current;
 	nodes[1]->key = 0;
-	//	print_heap("Current heap", nodes, heap_len);
 	while (node = heap_extract_min(nodes, &heap_len)) {
 		printf("Extracted node :%d, edge cost: %d\n", node->value, node->key);
-		//	print_heap("After extraction:", nodes, heap_len);
 		sum += node->key;
-		// node->index = INT_MAX;
-		current = node->neigh;
+		nlist_t *current = node->neigh;
 		while(current) {
 			edge_t *edge = current->edge;
 			if (edge->node->index <= heap_len)
 				if (edge->node->key > edge->cost) {
 					edge->node->key = edge->cost;
-					//	printf("    Updated edge cost for Node %d to %d\n", edge->node->value, edge->node->key);
-					// asssuming cost of key only go down, bubbl_up() should take care
 					bubble_up(nodes, edge->node->index);
-					//	print_heap("After updatexs:", nodes, heap_len);
 				}
-#if 0
-				else
-					printf("    --- skipping %d becuase key %d is <= %d\n", edge->node->value, edge->node->key, edge->cost);
-			else
-				printf("    *** skipping %d becuase index %d > heap_len %d\n",
-						edge->node->value, edge->node->index, heap_len);
-#endif
 			current = current->next;
 		}
-		//	print_heap("After updates:", nodes, heap_len);
-		//	printf("--------------------------------\n");
 	}
 	printf("Total sum: %ld\n", sum);
 
