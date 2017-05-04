@@ -60,8 +60,15 @@ print_heap(const char *label, node_t **heap, int len) {
 	printf("    %s\n", label);
 	for (int i = 1; i <= len; i++) {
 		node_t *node = heap[i];
-		printf("\tIndex: %d, value: %d, node_index: %d, key: %d\n",
+		printf("\tIndex: %d, value: %d, node_index: %d, key: %d ",
 				i, node->value, node->index, node->key);
+		printf("Neighbors: ");
+		nlist_t *current = node->neigh;
+		while (current) {
+			printf("%d[%d] ", current->edge->node->value, current->edge->node->index);
+			current = current->next;
+		}
+		printf("\n");
 	}
 }
 
@@ -130,8 +137,8 @@ static void add_neigh(node_t *n1, node_t *n2, int cost) {
 }
 
 int main() {
-	//	FILE *fp = fopen("edges.txt", "r");
-	FILE *fp = fopen("prim_tc1", "r");
+	FILE *fp = fopen("edges.txt", "r");
+	//	FILE *fp = fopen("prim_tc1", "r");
 	char *line = NULL;
 	size_t len;
 	ssize_t read;
@@ -162,29 +169,34 @@ int main() {
 	node_t *node;
 	nlist_t *current;
 	nodes[1]->key = 0;
-	print_heap("Current heap", nodes, heap_len);
+	//	print_heap("Current heap", nodes, heap_len);
 	while (node = heap_extract_min(nodes, &heap_len)) {
 		printf("Extracted node :%d, edge cost: %d\n", node->value, node->key);
-		print_heap("After extraction:", nodes, heap_len);
+		//	print_heap("After extraction:", nodes, heap_len);
 		sum += node->key;
 		// node->index = INT_MAX;
 		current = node->neigh;
 		while(current) {
 			edge_t *edge = current->edge;
-			if (edge->node->index < heap_len)
+			if (edge->node->index <= heap_len)
 				if (edge->node->key > edge->cost) {
 					edge->node->key = edge->cost;
-					printf("    Updated edge cost for Node %d to %d\n", edge->node->value, edge->node->key);
+					//	printf("    Updated edge cost for Node %d to %d\n", edge->node->value, edge->node->key);
 					// asssuming cost of key only go down, bubbl_up() should take care
 					bubble_up(nodes, edge->node->index);
-					print_heap("After updatexs:", nodes, heap_len);
+					//	print_heap("After updatexs:", nodes, heap_len);
 				}
+#if 0
 				else
-					printf("    skipping %d\n", edge->node->value);
+					printf("    --- skipping %d becuase key %d is <= %d\n", edge->node->value, edge->node->key, edge->cost);
+			else
+				printf("    *** skipping %d becuase index %d > heap_len %d\n",
+						edge->node->value, edge->node->index, heap_len);
+#endif
 			current = current->next;
 		}
-		print_heap("After updates:", nodes, heap_len);
-		printf("--------------------------------\n");
+		//	print_heap("After updates:", nodes, heap_len);
+		//	printf("--------------------------------\n");
 	}
 	printf("Total sum: %ld\n", sum);
 
