@@ -31,11 +31,8 @@ small test cases. And then post them to the discussion forum!
 #include <stdlib.h>
 
 typedef struct node node_t;
-
-typedef struct nodelist {
-	node_t *node;
-	node_t *next;
-}nodelist_t;
+typedef struct nodelist nodelist_t;
+typedef struct edge edge_t;
 
 struct node {
 	int label;
@@ -44,17 +41,61 @@ struct node {
 	nodelist_t *disciples;	
 };
 
-typedef struct edge {
+struct nodelist {
+	node_t *node;
+	nodelist_t *next;
+};
+
+struct edge {
 	node_t *n1;
 	node_t *n2;
 	int cost;
-}edge_t;
+};
 
 typedef unsigned int unionfind_t;
 
+static int 
+compar(const void *p1, const void *p2) {
+	edge_t *e1 = (edge_t *)p1;
+	edge_t *e2 = (edge_t *)p2;
+
+	return (e1->cost - e2->cost);
+}
+
+static int
+uf_union(node_t *n1, node_t *n2) {
+	if (n1->leader == n2->leader) {
+		return 0;
+	}
+	else {
+		node_t *sml;
+		node_t *big;
+		if (n1->leader->rank > n2->leader->rank) {
+			sml = n2->leader;
+			big = n1->leader;
+		} else {
+			sml = n1->leader;
+			big = n2->leader;
+		}
+
+		sml->leader = big;
+		big->rank += sml->rank;
+		while (sml->disciples) {
+			nodelist_t *current = sml->disciples;
+			current->node->leader = big->leader;
+			sml->disciples = sml->disciples->next;
+
+			current->next = big->disciples;
+			big->disciples = current;
+		}
+
+		return 1;
+	}
+}
+
 int main(void) {
 	FILE *fp = fopen("clustering1.txt", "r");
-
+#define TARGETK 4
 	char *line = NULL;
 	size_t len;
 	ssize_t read;
@@ -91,9 +132,34 @@ int main(void) {
 		count++;
 	}
 	printf("Counted edges: %d\n", count);
-
+	M = count;	
 	// sort the edges
+	// TODO: try it yourself
+	qsort(edges, M, sizeof(edge_t), compar);
 
+	for (int i = 0; i < M; i++) {
+		//	printf("%d %d %d\n", edges[i].n1->label, edges[i].n2->label, edges[i].cost);
+	}
+	
+	int k = N;
+	int i = 0;
+	int cost;
+	while ((k >= TARGETK) && (i < M)) {
+		printf("K=%d Examining edge %d--%d (%d)", k, edges[i].n1->label, edges[i].n2->label, edges[i].cost);
+		if (uf_union(edges[i].n1, edges[i].n2)) {
+			k--;
+			cost = edges[i].cost;
+			printf("----added----\n");
+		} 
+		else 
+			printf("-------------\n");
+		i++;
+	}
+	for (int x = 1; x <= N; x++) {
+		printf("Node: %d(%d) - Leader: %d (%d)\n", nodes[x].label, nodes[x].rank, nodes[x].leader->label, nodes[x].leader->rank);
+	}
+	printf("Answer: %d\n", cost);
+	
 	free(edges);
 	free(uf);
 	free(nodes);
