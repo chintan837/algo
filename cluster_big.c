@@ -33,3 +33,51 @@ write it out explicitly, let alone sort the edges by cost. So you will have to b
 little creative to complete this part of the question. For example, is there some way 
 you can identify the smallest distances without explicitly looking at every pair of nodes?
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct node node_t;
+struct node {
+	unsigned int label;
+	struct node *leader;
+	int rank;
+};
+
+int main (void) {
+	FILE *fp = fopen("clustering_big.txt", "r");
+
+	int N; int b;
+	char *line = NULL;
+	size_t len;
+	ssize_t read;
+	read = getline(&line, &len, fp);
+	sscanf(line, "%d %d\n", &N, &b);
+	printf("Number of nodes: %d #bits: %d\n", N, b);
+
+	node_t *nodes = calloc(N, sizeof (node_t));
+	int i = 0;
+	while ((read = getline(&line, &len, fp)) != -1) {
+		char *token;
+		unsigned int n = 0;
+		unsigned int mask = 0;
+		int bit = b-1;
+		while ((token = strsep(&line, " \n")) != NULL) {
+			mask = 1 << bit;
+			bit--;
+			if (token[0] == '1') {
+				n = n | mask;
+			}
+		}
+		nodes[i].label = n;
+		nodes[i].rank = 0;
+		nodes[i].leader = &nodes[i];
+	}
+
+	printf("Done reading nodes\n");
+
+	free(nodes);
+	free(line);
+	fclose (fp);
+}
