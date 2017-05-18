@@ -45,6 +45,28 @@ struct node {
 	int rank;
 };
 
+unsigned int *numbits;
+
+static int
+hamming_distance(node_t *n1, node_t *n2) {
+	
+}
+
+static void
+count_bits(unsigned int x) {
+	
+	
+}
+
+static void
+init_lookup(int b) {
+	numbits = calloc(1<<b, sizeof (unsigned int));
+
+	for (unsigned int i = 0; i < (1<<b), i++) {
+		numbits[i] = count_bits(i);
+	}
+}
+
 int main (void) {
 	FILE *fp = fopen("clustering_big.txt", "r");
 
@@ -57,6 +79,8 @@ int main (void) {
 	printf("Number of nodes: %d #bits: %d\n", N, b);
 
 	node_t *nodes = calloc(N, sizeof (node_t));
+	init_lookup(b);
+
 	int i = 0;
 	while ((read = getline(&line, &len, fp)) != -1) {
 		char *token;
@@ -77,6 +101,7 @@ int main (void) {
 
 	printf("Done reading nodes\n");
 
+	free(numbits);
 	free(nodes);
 	free(line);
 	fclose (fp);
