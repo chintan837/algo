@@ -190,7 +190,7 @@ int main (void) {
 		}
 		if ((i%2000) == 0) {
 			end = clock();
-			printf("%d%% complete t=%2fs\n", i, (double)(end-begin)/CLOCKS_PER_SEC);
+			printf("%d%% complete t=%2fs\n", i/2000, (double)(end-begin)/CLOCKS_PER_SEC);
 			begin = end;
 		}
 	}
