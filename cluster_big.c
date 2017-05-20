@@ -129,6 +129,7 @@ int main (void) {
 
 	int N; int b;
 	clock_t begin, end;
+	clock_t begin_m, end_m;
 
 	char *line = malloc(64);
 	size_t len;
@@ -144,6 +145,7 @@ int main (void) {
 	printf("Time taken in init lookup: %f\n", (double)(end-begin)/CLOCKS_PER_SEC);
 
 	int i = 0;
+	begin = clock();
 	while ((read = getline(&line, &len, fp)) != -1) {
 		char *token;
 		unsigned int n = 0;
@@ -161,8 +163,9 @@ int main (void) {
 		nodes[i].leader = &nodes[i];
 		i++;
 	}
+	end = clock();
+	printf("Time taken to read file: %f\n", (double)(end-begin)/CLOCKS_PER_SEC);
 
-	getchar();
 #if 0
 	for (int i = 0; i < 10; i++) {
 		//	printf("node %d: %s\n", i, printret);
@@ -178,7 +181,7 @@ int main (void) {
 
 	// number of clusters = # of nodes N
 	int k = N;
-	begin = clock();
+	begin_m = begin = clock();
 	for (int i = 0; i < N-1; i++) {
 		for (int j = i+1; j < N; j++) {
 			if (hamming_distance(nodes[i].label, nodes[j].label) <= 2) {
@@ -194,6 +197,9 @@ int main (void) {
 			begin = end;
 		}
 	}
+	end_m = clock();
+	printf("Total time takne in O(n^2) implementation: %2f\n", (double)(end_m-begin_m)/CLOCKS_PER_SEC);
+
 
 	printf("Number of clusters = %d\n", k);
 
