@@ -29,3 +29,48 @@ ADVICE: If you're not getting the correct answer, try debugging your algorithm
 using some small test cases. And then post them to the discussion forum!
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef unsigned long alphabet_t;
+
+int compar(const void *p1, const void *p2) {
+	alphabet_t *n1 = (alphabet_t *) p1;
+	alphabet_t *n2 = (alphabet_t *) p2;
+
+	return (*n1-*n2);
+}
+
+int main(void) {
+	FILE *fp = fopen("huffman.txt", "r");
+	int N = 0;
+	char *line = NULL;
+	size_t len;
+	ssize_t read;
+	read = getline(&line, &len, fp);
+	sscanf(line, "%d\n", &N);
+	printf("no of alphabets: %d\n", N);
+	alphabet_t *alphabets = calloc(N, sizeof (alphabet_t));
+
+	int i = 0;
+	while ((read = getline(&line, &len, fp)) != -1) {
+		sscanf(line, "%lu\n", &alphabets[i]);
+		i++;
+	}
+
+	for (i = 0; i < 10; i++) {
+		printf("%lu\n", alphabets[i]);
+	}
+
+	// sort the array
+	qsort(alphabets, N, sizeof(alphabet_t), compar);
+
+	//treat the sorted array as a heap. It satisfies the heap property
+
+	for (i = 0; i < 10; i++) {
+		printf("%lu\n", alphabets[i]);
+	}
+
+	free(alphabets);
+	fclose(fp);
+}
