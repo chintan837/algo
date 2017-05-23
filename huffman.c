@@ -31,6 +31,7 @@ using some small test cases. And then post them to the discussion forum!
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct alphabet alphabet_t;
 
@@ -45,6 +46,37 @@ int compar(const void *p1, const void *p2) {
 	alphabet_t *n2 = (alphabet_t *) p2;
 
 	return (n1->p-n2->p);
+}
+
+static void
+bubble_up(alphabet_t *head, size_t child) {
+	if (child <= 1)
+		return;
+	size_t parent = child/2;
+
+	if (head[parent].p > head[child].p) {
+		alphabet_t *tmp = malloc(sizeof(alphabet_t));
+		memcpy(&(head[parent]), tmp, sizeof(alphabet_t));
+		memcpy(&(head[child]), &(head[parent]), sizeof(alphabet_t));
+		memcpy(tmp, &(head[child]), sizeof(alphabet_t));
+
+		free(tmp);
+
+		realloc
+	}
+}
+
+static void
+heap_insert(alphabet_t *head, size_t *len, alphabet_t *elem) {
+	head[*len] = elem;
+	(*len)++;
+
+	bubble_up(head, *len);
+}
+
+static alphabet_t *
+heap_extract_min() {
+
 }
 
 int main(void) {
