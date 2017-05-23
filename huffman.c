@@ -32,13 +32,19 @@ using some small test cases. And then post them to the discussion forum!
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef unsigned long alphabet_t;
+typedef struct alphabet alphabet_t;
+
+struct alphabet {
+	unsigned long p;
+	alphabet_t *left;
+	alphabet_t *rght;
+};
 
 int compar(const void *p1, const void *p2) {
 	alphabet_t *n1 = (alphabet_t *) p1;
 	alphabet_t *n2 = (alphabet_t *) p2;
 
-	return (*n1-*n2);
+	return (n1->p-n2->p);
 }
 
 int main(void) {
@@ -54,12 +60,12 @@ int main(void) {
 
 	int i = 0;
 	while ((read = getline(&line, &len, fp)) != -1) {
-		sscanf(line, "%lu\n", &alphabets[i]);
+		sscanf(line, "%lu\n", &(alphabets[i].p));
 		i++;
 	}
 
 	for (i = 0; i < 10; i++) {
-		printf("%lu\n", alphabets[i]);
+		printf("%lu\n", alphabets[i].p);
 	}
 
 	// sort the array
@@ -68,7 +74,7 @@ int main(void) {
 	//treat the sorted array as a heap. It satisfies the heap property
 
 	for (i = 0; i < 10; i++) {
-		printf("%lu\n", alphabets[i]);
+		printf("%lu\n", alphabets[i].p);
 	}
 
 	free(alphabets);
