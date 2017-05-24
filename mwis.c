@@ -23,7 +23,6 @@ For example, the third line of the file is "6395702," indicating that the
 weight of the second vertex of the graph is 6395702.
 
 Your task in this problem is to run the dynamic programming algorithm (and 
-
 the reconstruction procedure) from lecture on this data set. The question 
 is: of the vertices 1, 2, 3, 4, 17, 117, 517, and 997, which ones belong 
 to the maximum-weight independent set? (By "vertex 1" we mean the first 
@@ -35,3 +34,40 @@ set and the other four vertices are not, then you should enter the string
 10011010 in the box below.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct vertex vertex_t;
+
+struct vertex {
+	int label;
+	int weight;
+};
+
+int main(void) {
+	FILE *fp = fopen("mwis.txt", "r");
+	int N;
+
+	char *line = NULL;
+	size_t len;
+	ssize_t read;
+	read = getline(&line, &len, fp);
+	sscanf(line, "%d\n", &N);
+	printf("number of nodes: %d\n", N);
+	vertex_t *vertices = calloc(N+1, sizeof(vertex_t));
+
+	int i = 1;
+	while ((read = getline(&line, &len, fp)) != -1) {
+		(vertices+i)->label = i;
+		sscanf(line, "%d\n", &((vertices+i)->weight));
+		i++;
+	}
+
+	for (i = 1; i <= N; i++) {
+		printf("Node: %d weight: %d\n", (vertices+i)->label, (vertices+i)->weight);
+
+	}
+
+	free(vertices);
+	fclose(fp);
+}
