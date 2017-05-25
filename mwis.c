@@ -42,7 +42,28 @@ typedef struct vertex vertex_t;
 struct vertex {
 	int label;
 	int weight;
+	long mwis;
+	int included;
 };
+
+static void 
+mwis(vertex_t *vertices, int n) {
+	if (n <= 1) {
+		(vertices+n)->mwis = (vertices+n)->weight;
+		return;
+	}
+
+	mwis(vertices, n-1);
+	// the n-2 is a hack, should crash usually, but the 
+	// N+1 size on calloc with pos 0 not being used
+	// but initialized to 0, helps us in this 
+	long w1 = (vertices+n-2)->mwis + (vertices+n)->weight;
+	long w2 = (vertices+n-1)->mwis;
+	if (w1 > w2)
+		(vertices+n)->mwis = w1;
+	else
+		(vertices+n)->mwis = w2;
+}
 
 int main(void) {
 	FILE *fp = fopen("mwis.txt", "r");
@@ -51,6 +72,7 @@ int main(void) {
 	char *line = NULL;
 	size_t len;
 	ssize_t read;
+
 	read = getline(&line, &len, fp);
 	sscanf(line, "%d\n", &N);
 	printf("number of nodes: %d\n", N);
@@ -63,10 +85,37 @@ int main(void) {
 		i++;
 	}
 
-	for (i = 1; i <= N; i++) {
-		printf("Node: %d weight: %d\n", (vertices+i)->label, (vertices+i)->weight);
-
+	mwis(vertices, N);
+	i = N;
+	while (i >= 1) {
+		long w1 = (vertices+i-2)->mwis+(vertices+i)->weight;
+		long w2 = (vertices+i-1)->mwis;
+		if (w2 < w1) {
+			(vertices+i)->included = 1;
+			i -= 2;
+		} else
+			i -= 1;
 	}
+	for (i = 0; i <= N; i++) {
+		printf("Node: %4d weight: %7d mwis: %ld included: %d\n", (vertices+i)->label,
+				(vertices+i)->weight, (vertices+i)->mwis, (vertices+i)->included);
+	}
+
+	for (i = 1; i <= N; i++) {
+		switch (i) {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 17:
+			case 117:
+			case 517:
+			case 997:
+				printf("%d", (vertices+i)->included);
+				break;
+		}
+	}
+	printf("\n");
 
 	free(vertices);
 	fclose(fp);
