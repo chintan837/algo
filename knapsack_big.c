@@ -64,6 +64,12 @@ typedef struct item {
 	long weight;
 }item_t;
 
+typedef struct btree {
+	item_t *item;
+	struct btree *left;
+	struct btree *right;
+}btree_t;
+
 static long 
 max (long n1, long n2) {
 	if (n1 > n2)
@@ -72,36 +78,76 @@ max (long n1, long n2) {
 		return n2;
 }
 
-static long
-max_value(item_t *items, int n, int w) {
-	if (n <= 0)
+static size_t count = 0;
+
+static btree_t *
+btree_insert(btree_t *root, item_t *item) {
+	if (root == NULL) {
+		btree_t *treenode = malloc(sizeof (btree_t));
+		treenode->item = item;
+		treenode->left = NULL;
+		treenode->right = NULL;
+
+		return treenode;
+	}
+
+	if (item->weight < root->item->weight)
+		root->left = btree_insert(root->left, item);
+	else
+		root->right = btree_insert(root->right, item);
+}
+
+static int
+btree_find(btree_t *root, long weight, long *val) {
+	if (root == NULL)
 		return 0;
+
+	if (root->item->weight == weight) {
+		*val = root->item->value;
+		return 1;
+	}
+	if (root->item->weight < weight)
+		return btree_find(root->left, weight, val);
+	else
+		return btree_find(root->right, weight, val);
+}
+
+static long
+max_value(item_t *items, int n, int w, btree_t *calculated_items) {
+	count++;
+	if (n <= 0) {
+		return 0;
+	}
 	if (w <= 0)
 		return 0;
 
 	// This is where you need some form of caching mechanism
 	// if you have already seen this n and w pair, retrieve results
 	// else calculate and cache results for future use
-
-#if 0
-	for (i = 1; i <= N; i++)
-		for (j = 0; j <= W; j++) {
-		 	long index = j - ((items+i)->weight);
-			if (index < 0) {
-				A[i][j] = A[i-1][j];
-			} else { 
-				A[i][j] = max(A[i-1][j], A[i-1][index]+(items+i)->value);
-			}
-		}
-#endif
+	btree_t *root = calculated_items+n;
+	long val = 0;
+	long val1 = 0;
+	long val2 = 0;
+	if (btree_find(root, w, &val))
+		return val;
+	item_t *newitem;
 
 	// not included
-	long val1 = max_value(items, n-1, w);
-	
+	val1 = max_value(items, n-1, w, calculated_items);
+	newitem = malloc(sizeof (item_t));
+	newitem->weight = w;
+	newitem->value = val1;
+	root = btree_insert(root, newitem);
+
 	//included
-	long val2 = max_value(items, n-1, w-(items+n)->weight) + (items+n)->value;
-	if (w-(items+n)->weight < 0)
-		val2 = 0;
+	long weight = w-(items+n)->weight;
+	if (weight < 0)
+		return val1;
+	val2 = max_value(items, n-1, weight, calculated_items) + (items+n)->value;
+	newitem = malloc(sizeof (item_t));
+	newitem->weight = weight;
+	newitem->value = val2;
+	root = btree_insert(root, newitem);
 
 	if (val1 > val2)
 		return val1;
@@ -117,6 +163,7 @@ int main(void) {
 	fscanf(fp, "%d %d\n", &W, &N);
 	printf("knapsack_size: %d number_of_items: %d\n", W, N);
 	item_t *items = calloc(N+1, sizeof(item_t));
+	btree_t *calculated_items = calloc(N+1, sizeof(item_t));
 	int i = 0, j = 0;
 
 	i = 1;
@@ -125,12 +172,12 @@ int main(void) {
 		i++;
 	}
 
-	long answer = max_value(items, N, W);
+	count = 0;
+	long answer = max_value(items, N, W, calculated_items);
+	
+	printf("value of knapsack: %ld, count: %lu\n", answer, count);
 
-
-
-	printf("value of knapsack: %ld\n", answer);
-
+	free(calculated_items);
 	free(items);
 	fclose(fp);
 	return 0;
