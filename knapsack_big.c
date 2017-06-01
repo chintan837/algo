@@ -113,7 +113,7 @@ btree_find(btree_t *root, long weight, long *val) {
 }
 
 static long
-max_value(item_t *items, int n, int w, btree_t *calculated_items) {
+max_value(item_t *items, int n, int w, btree_t **calculated_items) {
 	count++;
 	if (n <= 0) {
 		return 0;
@@ -124,7 +124,7 @@ max_value(item_t *items, int n, int w, btree_t *calculated_items) {
 	// This is where you need some form of caching mechanism
 	// if you have already seen this n and w pair, retrieve results
 	// else calculate and cache results for future use
-	btree_t *root = calculated_items+n;
+	btree_t *root = calculated_items[n];
 	long val = 0;
 	long val1 = 0;
 	long val2 = 0;
@@ -156,15 +156,18 @@ max_value(item_t *items, int n, int w, btree_t *calculated_items) {
 }
 
 int main(void) {
-	FILE *fp = fopen("knapsack2.txt", "r");
+	int i = 0, j = 0;
+	FILE *fp = fopen("knapsack4.txt", "r");
 	if (!fp)
 		perror("fopen");
 	int W = 0, N = 0;
 	fscanf(fp, "%d %d\n", &W, &N);
 	printf("knapsack_size: %d number_of_items: %d\n", W, N);
 	item_t *items = calloc(N+1, sizeof(item_t));
-	btree_t *calculated_items = calloc(N+1, sizeof(item_t));
-	int i = 0, j = 0;
+	btree_t **calculated_items = calloc(N+1, sizeof(btree_t *));
+	for (i = 0; i <= N; i++) {
+		calculated_items[i] = NULL;
+	}
 
 	i = 1;
 	while ((fscanf(fp, "%ld %ld\n", &(items+i)->value, &(items+i)->weight)) != EOF) {
