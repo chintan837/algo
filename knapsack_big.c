@@ -59,10 +59,19 @@ small test cases. And then post them to the discussion forum!
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct item {
+typedef struct item item_t;
+typedef struct itemlist list_t;
+
+struct item {
 	long value;
 	long weight;
-}item_t;
+	list_t *list;
+};
+
+struct itemlist {
+	item_t *item;
+	list_t *next;
+};
 
 typedef struct btree {
 	item_t *item;
@@ -80,6 +89,60 @@ max (long n1, long n2) {
 
 static size_t count = 0;
 
+static void
+list_print(list_t *head) {
+	while (head) {
+		printf("\t%ld \n", head->item->weight);
+		head = head->next;
+	}
+}
+
+static size_t
+list_count(list_t *head) {
+	size_t count = 0;
+	while (head) {
+		count++;
+		head = head->next;
+	}
+	return count;
+}
+
+static inline list_t *
+create_list_item(long weight) {
+	item_t *i = malloc(sizeof(item_t));
+	i->value = 0;
+	i->weight = weight;
+	i->list = NULL;
+
+	list_t *l = malloc(sizeof(list_t));
+	l->item = i;
+	l->next = NULL;
+
+	return l;
+}
+
+static void 
+list_add(list_t **head, long weight) {
+	if (weight <= 0)
+		return;
+
+	if (*head == NULL) {
+		*head = create_list_item(weight);
+		return;
+	}
+	list_t *current = *head;
+	while (current) {
+		if (current->item->weight == weight)
+			return;
+		if (current->next == NULL)
+			break;
+		current = current->next;
+	}
+
+	current->next = create_list_item(weight);
+}
+
+
 static btree_t *
 btree_insert(btree_t *root, item_t *item) {
 	if (root == NULL) {
@@ -95,6 +158,8 @@ btree_insert(btree_t *root, item_t *item) {
 		root->left = btree_insert(root->left, item);
 	else
 		root->right = btree_insert(root->right, item);
+
+	return NULL;
 }
 
 static int
@@ -110,6 +175,13 @@ btree_find(btree_t *root, long weight, long *val) {
 		return btree_find(root->left, weight, val);
 	else
 		return btree_find(root->right, weight, val);
+}
+
+int compar(const void *p1, const void *p2) {
+	item_t *i1 = (item_t *)p1;
+	item_t *i2 = (item_t *)p2;
+
+	return (i1->weight - i2->weight);
 }
 
 static long
@@ -157,30 +229,42 @@ max_value(item_t *items, int n, int w, btree_t **calculated_items) {
 
 int main(void) {
 	int i = 0, j = 0;
-	FILE *fp = fopen("knapsack4.txt", "r");
+	FILE *fp = fopen("knapsack_big.txt", "r");
 	if (!fp)
 		perror("fopen");
 	int W = 0, N = 0;
 	fscanf(fp, "%d %d\n", &W, &N);
 	printf("knapsack_size: %d number_of_items: %d\n", W, N);
 	item_t *items = calloc(N+1, sizeof(item_t));
-	btree_t **calculated_items = calloc(N+1, sizeof(btree_t *));
-	for (i = 0; i <= N; i++) {
-		calculated_items[i] = NULL;
-	}
-
+	
 	i = 1;
 	while ((fscanf(fp, "%ld %ld\n", &(items+i)->value, &(items+i)->weight)) != EOF) {
-		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
+		//	printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
+		(items+i)->list = NULL;
 		i++;
 	}
 
-	count = 0;
-	long answer = max_value(items, N, W, calculated_items);
-	
-	printf("value of knapsack: %ld, count: %lu\n", answer, count);
+	qsort(items+1, N, sizeof(item_t), compar);
+	for (i = 1; i <= N; i++)
+		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
-	free(calculated_items);
+	count = 0;
+	list_add(&((items+N)->list), W);
+	list_add(&((items+N)->list), W-(items+N)->weight);		
+	for (i = N-1; i > 0; i--) {
+		list_t *srclist = (items+i+1)->list;
+		while (srclist) {
+			list_add(&((items+i)->list), srclist->item->weight);
+			list_add(&((items+i)->list), (srclist->item->weight)-((items+i)->weight));
+			srclist = srclist->next;
+		}
+		printf("Calculate for v%d: %ld, w%d: %ld, count: %ld\n", i, (items+i)->value, i, (items+i)->weight, list_count((items+i)->list));
+	}
+
+	for (i = N; i > 0; i--) {
+		//	printf("Calculate for v%d: %ld, w%d: %ld, count: %ld\n", i, (items+i)->value, i, (items+i)->weight, list_count((items+i)->list));
+	}
+
 	free(items);
 	fclose(fp);
 	return 0;
