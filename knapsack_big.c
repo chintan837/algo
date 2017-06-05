@@ -65,7 +65,8 @@ typedef struct itemlist list_t;
 struct item {
 	long value;
 	long weight;
-	list_t *list;
+	item_t *array;
+	int list_size;
 };
 
 struct itemlist {
@@ -112,7 +113,8 @@ create_list_item(long weight) {
 	item_t *i = malloc(sizeof(item_t));
 	i->value = 0;
 	i->weight = weight;
-	i->list = NULL;
+	i->array = NULL;
+	i->list_size = 0;
 
 	list_t *l = malloc(sizeof(list_t));
 	l->item = i;
@@ -121,25 +123,26 @@ create_list_item(long weight) {
 	return l;
 }
 
-static void 
+static int 
 list_add(list_t **head, long weight) {
 	if (weight <= 0)
-		return;
+		return 0;
 
 	if (*head == NULL) {
 		*head = create_list_item(weight);
-		return;
+		return 1;
 	}
 	list_t *current = *head;
 	while (current) {
 		if (current->item->weight == weight)
-			return;
+			return 0;
 		if (current->next == NULL)
 			break;
 		current = current->next;
 	}
 
 	current->next = create_list_item(weight);
+	return 1;
 }
 
 
@@ -240,30 +243,49 @@ int main(void) {
 	i = 1;
 	while ((fscanf(fp, "%ld %ld\n", &(items+i)->value, &(items+i)->weight)) != EOF) {
 		//	printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
-		(items+i)->list = NULL;
+		(items+i)->list_size = 0;
+		(items+i)->array = NULL;
 		i++;
 	}
 
 	qsort(items+1, N, sizeof(item_t), compar);
-	for (i = 1; i <= N; i++)
-		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
+	//	for (i = 1; i <= N; i++)
+	//		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
 	count = 0;
-	list_add(&((items+N)->list), W);
-	list_add(&((items+N)->list), W-(items+N)->weight);		
+	item_t *item = items+N;
+	item_t *prev = NULL;
+	list_t *list = NULL;
+
+	item->list_size += list_add(&list, W);
+	item->list_size += list_add(&list, W-item->weight);
 	for (i = N-1; i > 0; i--) {
-		list_t *srclist = (items+i+1)->list;
-		while (srclist) {
-			list_add(&((items+i)->list), srclist->item->weight);
-			list_add(&((items+i)->list), (srclist->item->weight)-((items+i)->weight));
-			srclist = srclist->next;
+		item = items+i;
+		prev = items+i+1;
+		// convert prev list to array
+		prev->array = calloc(prev->list_size, sizeof(item_t));
+		int index = 0;
+		while (list) {
+			list_t *del = list;
+			prev->array[index].weight = list->item->weight;
+			index++;
+			list = list->next;
+			free(del);
 		}
-		printf("Calculate for v%d: %ld, w%d: %ld, count: %ld\n", i, (items+i)->value, i, (items+i)->weight, list_count((items+i)->list));
+		list = NULL;
+
+		//scan over above array and add teh elems to a list
+
+		item_t *array = prev->array;
+		for (index = 0; index < prev->list_size; index++) {
+			item->list_size += list_add(&list, array[index].weight);
+			item->list_size += list_add(&list, array[index].weight - item->weight);
+		}
+		printf("Calculate for v%d: %ld, w%d: %ld, count: %d\n", i, item->value, i, item->weight, item->list_size);
 	}
 
-	for (i = N; i > 0; i--) {
-		//	printf("Calculate for v%d: %ld, w%d: %ld, count: %ld\n", i, (items+i)->value, i, (items+i)->weight, list_count((items+i)->list));
-	}
+//	for (i = N; i > 0; i--) 
+	//	printf("Calculate for v%d: %ld, w%d: %ld, count: %ld\n", i, (items+i)->value, i, (items+i)->weight, list_count((items+i)->list));
 
 	free(items);
 	fclose(fp);
