@@ -146,7 +146,7 @@ int compar(const void *p1, const void *p2) {
 
 int main(void) {
 	int i = 0, j = 0;
-	FILE *fp = fopen("knapsack5.txt", "r");
+	FILE *fp = fopen("knapsack2.txt", "r");
 	if (!fp)
 		perror("fopen");
 	int W = 0, N = 0;
@@ -168,6 +168,7 @@ int main(void) {
 	for (i = 1; i <= N; i++)
 		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
+	N = 2;
 	item_t *item = items+N;
 	item_t *prev = NULL;
 
