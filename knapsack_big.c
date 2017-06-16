@@ -156,7 +156,6 @@ int main(void) {
 	size_t max_weights = N;
 	long *weights = calloc(max_weights, sizeof(long));
 	size_t num_weights;
-	size_t new_weights;
 	btree_t *weights_tree = NULL;
 
 	i = 1;
@@ -169,19 +168,18 @@ int main(void) {
 		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
 	N = 2;
-	num_weights = 0;
-	new_weights = 0;
+	W = 50;
 	item_t *item = items+N;
 	item_t *prev = NULL;
 
+	num_weights = 0;
 	if (btree_insert(&weights_tree, W, num_weights)) {
 		weights[num_weights] = W;
 		num_weights++;	
 	}
-	item->sub_problem_size = num_weights;
 	
 	long weight = 0;
-	for (i = N-1; i > 0; i--) {
+	for (i = N; i > 1; i--) {
 		item = items+i;
 		item->sub_problem_size = num_weights;
 		for (int j = 0; j < num_weights; j++) {
@@ -191,20 +189,33 @@ int main(void) {
 			if (btree_insert(&weights_tree, weight, item->sub_problem_size)) {
 				weights[item->sub_problem_size] = weight;
 				printf("\tAdded %ld\n", weight);
-				item->sub_problem_size++;
-				if (item->sub_problem_size >= max_weights) {
+				num_weights++;	
+				if (num_weights >= max_weights) {
 					max_weights *= 2;
 					weights = realloc(weights, max_weights * sizeof(long));
 				}
 			}
 		}
-		num_weights = item->sub_problem_size;
-
 		printf("Calculated for v%d: %ld, w%d: %ld, count: %d\n", 
 			i, item->value, i, item->weight, item->sub_problem_size);
 	}
-	//	printf("Calculate for v%d: %ld, w%d: %ld, count: %d\n", i, item->value, i, item->weight, item->sub_problem_size);
+	// i is 1, the last element to be considered, for num_weights problems
+	item = items+i;
+	item->sub_problem_size = num_weights;
 	
+	item_t *prev_problem = calloc(num_weights, sizeof(item_t));
+	printf("item %d: sub_problem_size: %d\n", 1, item->sub_problem_size);
+	
+	for (int j = 0; j < item->sub_problem_size; j++) {
+		prev_problem[j].weight = weights[j]; 
+		if (weights[j] < item->weight)
+			prev_problem[j].value = 0;
+		else
+			prev_problem[j].value = item->value;
+	}
+
+	printf("Calculate for v%d: %ld, w%d: %ld, sub_problem_size: %d\n", i, item->value, i, item->weight, item->sub_problem_size);
+#if 0
 	btree_print_inorder(weights_tree);
 	printf("\n");
 	for (i = 1; i <= N; i++) {
@@ -215,22 +226,8 @@ int main(void) {
 		}
 		printf("\n\n");
 	}
-
+#endif
 	// initialize value of n1 with 0 if weight < w1 else v1
-	item_t *prev_problem = calloc(num_weights, sizeof(item_t));
-	printf("item %d: sub_problem_size: %d\n", 1, (items+1)->sub_problem_size);
-	item = items+1;
-	for (int j = 0; j < item->sub_problem_size; j++) {
-		prev_problem[j].weight = weights[j]; 
-		if (weights[j] < item->weight)
-			prev_problem[j].value = 0;
-		else
-			prev_problem[j].value = item->value;
-	}
-	for (int j = 0; j < item->sub_problem_size; j++) {
-		printf("");
-	}
-
 	for (i = 2; i <= N; i++) {
 		printf("item %d: sub_problem_size: %d\n", i, (items+i)->sub_problem_size);
 		item = items+i;
@@ -257,6 +254,10 @@ int main(void) {
 		free(prev_problem);
 		prev_problem = sub_problem;
 	}
+
+	printf("sub_prob_size: %d", item->sub_problem_size);
+	printf("Answer: %ld", prev_problem[0].value);
+
 #if 0
 	for (i = 0; i < num_weights; i++) {
 		printf("%8ld ", weights[i]);
