@@ -66,7 +66,7 @@ typedef struct itemlist list_t;
 struct item {
 	long value;
 	long weight;
-	int sub_problem_size;
+	size_t sub_problem_size;
 };
 
 struct itemlist {
@@ -123,6 +123,7 @@ btree_insert(btree_t **root, long weight, size_t index) {
 
 		*root = treenode;
 
+		printf("\tAdded %ld, index %zu\n", weight, index);
 		return 1;
 	}
 
@@ -164,11 +165,12 @@ int main(void) {
 	}
 
 	qsort(items+1, N, sizeof(item_t), compar);
+	//	N = 3;
+	//	W = 30;
+	printf("W: %d\n", W);
 	for (i = 1; i <= N; i++)
 		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
-	N = 2;
-	W = 50;
 	item_t *item = items+N;
 	item_t *prev = NULL;
 
@@ -182,29 +184,35 @@ int main(void) {
 	for (i = N; i > 1; i--) {
 		item = items+i;
 		item->sub_problem_size = num_weights;
-		for (int j = 0; j < num_weights; j++) {
+		printf("Calculated for v%d: %ld, w%d: %ld, sub_problem_size: %zu\n", 
+			i, item->value, i, item->weight, item->sub_problem_size);
+		for (int j = 0; j < item->sub_problem_size; j++) {
+			printf("(%ld - %ld = %ld)", weights[j], item->weight, weights[j]-item->weight);
+		}
+		printf("\n");
+		for (int j = 0; j < item->sub_problem_size; j++) {
 			weight = weights[j]-item->weight;
 			if (weight <= 0)
 				continue;
-			if (btree_insert(&weights_tree, weight, item->sub_problem_size)) {
-				weights[item->sub_problem_size] = weight;
-				printf("\tAdded %ld\n", weight);
-				num_weights++;	
+			printf("calculated: %ld\n", weight);
+			if (btree_insert(&weights_tree, weight, num_weights)) {
+				weights[num_weights] = weight;
+				//	printf("\tAdded %ld, index %d\n", weight, item->sub_problem_size);
+				num_weights++;
 				if (num_weights >= max_weights) {
 					max_weights *= 2;
 					weights = realloc(weights, max_weights * sizeof(long));
 				}
 			}
 		}
-		printf("Calculated for v%d: %ld, w%d: %ld, count: %d\n", 
-			i, item->value, i, item->weight, item->sub_problem_size);
 	}
 	// i is 1, the last element to be considered, for num_weights problems
 	item = items+i;
 	item->sub_problem_size = num_weights;
+	printf("Calculate for v%d: %ld, w%d: %ld, sub_problem_size: %zu\n", i, item->value, i, item->weight, item->sub_problem_size);
 	
 	item_t *prev_problem = calloc(num_weights, sizeof(item_t));
-	printf("item %d: sub_problem_size: %d\n", 1, item->sub_problem_size);
+	printf("item %d: sub_problem_size: %zu\n", 1, item->sub_problem_size);
 	
 	for (int j = 0; j < item->sub_problem_size; j++) {
 		prev_problem[j].weight = weights[j]; 
@@ -214,7 +222,6 @@ int main(void) {
 			prev_problem[j].value = item->value;
 	}
 
-	printf("Calculate for v%d: %ld, w%d: %ld, sub_problem_size: %d\n", i, item->value, i, item->weight, item->sub_problem_size);
 #if 0
 	btree_print_inorder(weights_tree);
 	printf("\n");
@@ -229,7 +236,7 @@ int main(void) {
 #endif
 	// initialize value of n1 with 0 if weight < w1 else v1
 	for (i = 2; i <= N; i++) {
-		printf("item %d: sub_problem_size: %d\n", i, (items+i)->sub_problem_size);
+		printf("item %d: sub_problem_size: %zu\n", i, (items+i)->sub_problem_size);
 		item = items+i;
 		item_t *sub_problem = calloc(item->sub_problem_size, sizeof(item_t));
 		for (int j = 0; j < item->sub_problem_size; j++) {
@@ -242,6 +249,7 @@ int main(void) {
 			else {
 				int index = btree_find(weights_tree, weights[j]-item->weight);
 				if (index < 0) {
+					printf("Alert: This should never happen\n");
 					printf("Could not find weight %ld[%d]-%ld(%ld)=%ld\n", weights[j], j, item->weight, item->value, weights[j]-item->weight);
 					sub_problem[j].value = val1;
 				} else {
@@ -255,8 +263,8 @@ int main(void) {
 		prev_problem = sub_problem;
 	}
 
-	printf("sub_prob_size: %d", item->sub_problem_size);
-	printf("Answer: %ld", prev_problem[0].value);
+	printf("sub_prob_size: %zu\n", item->sub_problem_size);
+	printf("Answer: %ld\n", prev_problem[0].value);
 
 #if 0
 	for (i = 0; i < num_weights; i++) {
@@ -265,7 +273,7 @@ int main(void) {
 			printf("\n");
 	}
 #endif
-
+	free(prev_problem);
 	free(weights);
 	free(items);
 	fclose(fp);
