@@ -76,9 +76,10 @@ struct itemlist {
 
 typedef struct btree {
 	long weight;
-	size_t index;
+	long index;
 	struct btree *left;
 	struct btree *right;
+	int height;
 }btree_t;
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -118,16 +119,22 @@ btree_print_inorder(btree_t *root) {
 	btree_print_inorder(root->right);
 }
 
-static int
-btree_insert(btree_t **root, long weight, size_t index) {
-	if (*root == NULL) {
-		btree_t *treenode = malloc(sizeof (btree_t));
-		treenode->weight = weight;
-		treenode->index = index;
-		treenode->left = NULL;
-		treenode->right = NULL;
+static btree_t *
+newnode(long weight, long index) {
+	btree_t *treenode = malloc(sizeof (btree_t));
+	treenode->weight = weight;
+	treenode->index = index;
+	treenode->left = NULL;
+	treenode->right = NULL;
 
-		*root = treenode;
+	return treenode;
+}
+
+static int
+btree_insert(btree_t **root, long weight, long index) {
+	if (*root == NULL) {
+
+		*root = newnode(weight, index);
 
 		//	printf("\tAdded %ld, index %zu\n", weight, index);
 		return 1;
@@ -170,7 +177,7 @@ int main(void) {
 		i++;
 	}
 
-	qsort(items+1, N, sizeof(item_t), compar);
+	//	qsort(items+1, N, sizeof(item_t), compar);
 	//	N = 3;
 	//	W = 30;
 	//	printf("W: %d\n", W);
