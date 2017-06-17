@@ -81,12 +81,18 @@ typedef struct btree {
 	struct btree *right;
 }btree_t;
 
-static long 
-max(long n1, long n2) {
-	if (n1 > n2)
-		return n1;
-	else
-		return n2;
+#define max(a,b) ((a) > (b) ? (a) : (b))
+#define min(a,b) ((a) < (b) ? (a) : (b))
+
+static int
+btree_height(btree_t *root) {
+	if (root == NULL)
+		return 0;
+
+	int l = btree_height(root->left);
+	int r = btree_height(root->right);
+
+	return (max(l, r) + 1);
 }
 
 static int
@@ -123,7 +129,7 @@ btree_insert(btree_t **root, long weight, size_t index) {
 
 		*root = treenode;
 
-		printf("\tAdded %ld, index %zu\n", weight, index);
+		//	printf("\tAdded %ld, index %zu\n", weight, index);
 		return 1;
 	}
 
@@ -147,7 +153,7 @@ int compar(const void *p1, const void *p2) {
 
 int main(void) {
 	int i = 0, j = 0;
-	FILE *fp = fopen("knapsack2.txt", "r");
+	FILE *fp = fopen("knapsack_big.txt", "r");
 	if (!fp)
 		perror("fopen");
 	int W = 0, N = 0;
@@ -167,9 +173,9 @@ int main(void) {
 	qsort(items+1, N, sizeof(item_t), compar);
 	//	N = 3;
 	//	W = 30;
-	printf("W: %d\n", W);
-	for (i = 1; i <= N; i++)
-		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
+	//	printf("W: %d\n", W);
+	//	for (i = 1; i <= N; i++)
+	//		printf("v%d: %ld, w%d: %ld\n", i, (items+i)->value, i, (items+i)->weight);
 
 	item_t *item = items+N;
 	item_t *prev = NULL;
@@ -184,17 +190,17 @@ int main(void) {
 	for (i = N; i > 1; i--) {
 		item = items+i;
 		item->sub_problem_size = num_weights;
-		printf("Calculated for v%d: %ld, w%d: %ld, sub_problem_size: %zu\n", 
-			i, item->value, i, item->weight, item->sub_problem_size);
-		for (int j = 0; j < item->sub_problem_size; j++) {
-			printf("(%ld - %ld = %ld)", weights[j], item->weight, weights[j]-item->weight);
-		}
-		printf("\n");
+		//	printf("Calculated for v%d: %ld, w%d: %ld, sub_problem_size: %zu\n", 
+		//		i, item->value, i, item->weight, item->sub_problem_size);
+		//	for (int j = 0; j < item->sub_problem_size; j++) {
+		//		printf("(%ld - %ld = %ld)", weights[j], item->weight, weights[j]-item->weight);
+		//	}
+		//	printf("\n");
 		for (int j = 0; j < item->sub_problem_size; j++) {
 			weight = weights[j]-item->weight;
 			if (weight <= 0)
 				continue;
-			printf("calculated: %ld\n", weight);
+			//	printf("calculated: %ld\n", weight);
 			if (btree_insert(&weights_tree, weight, num_weights)) {
 				weights[num_weights] = weight;
 				//	printf("\tAdded %ld, index %d\n", weight, item->sub_problem_size);
@@ -210,9 +216,10 @@ int main(void) {
 	item = items+i;
 	item->sub_problem_size = num_weights;
 	printf("Calculate for v%d: %ld, w%d: %ld, sub_problem_size: %zu\n", i, item->value, i, item->weight, item->sub_problem_size);
-	
+	printf("tree height: %d\n", btree_height(weights_tree));
+
 	item_t *prev_problem = calloc(num_weights, sizeof(item_t));
-	printf("item %d: sub_problem_size: %zu\n", 1, item->sub_problem_size);
+	//	printf("item %d: sub_problem_size: %zu\n", 1, item->sub_problem_size);
 	
 	for (int j = 0; j < item->sub_problem_size; j++) {
 		prev_problem[j].weight = weights[j]; 
@@ -236,7 +243,7 @@ int main(void) {
 #endif
 	// initialize value of n1 with 0 if weight < w1 else v1
 	for (i = 2; i <= N; i++) {
-		printf("item %d: sub_problem_size: %zu\n", i, (items+i)->sub_problem_size);
+		//	printf("item %d: sub_problem_size: %zu\n", i, (items+i)->sub_problem_size);
 		item = items+i;
 		item_t *sub_problem = calloc(item->sub_problem_size, sizeof(item_t));
 		for (int j = 0; j < item->sub_problem_size; j++) {
@@ -249,8 +256,8 @@ int main(void) {
 			else {
 				int index = btree_find(weights_tree, weights[j]-item->weight);
 				if (index < 0) {
-					printf("Alert: This should never happen\n");
-					printf("Could not find weight %ld[%d]-%ld(%ld)=%ld\n", weights[j], j, item->weight, item->value, weights[j]-item->weight);
+					//	printf("Alert: This should never happen\n");
+					//	printf("Could not find weight %ld[%d]-%ld(%ld)=%ld\n", weights[j], j, item->weight, item->value, weights[j]-item->weight);
 					sub_problem[j].value = val1;
 				} else {
 					val2 = prev_problem[index].value + item->value;
@@ -263,7 +270,7 @@ int main(void) {
 		prev_problem = sub_problem;
 	}
 
-	printf("sub_prob_size: %zu\n", item->sub_problem_size);
+	//	printf("sub_prob_size: %zu\n", item->sub_problem_size);
 	printf("Answer: %ld\n", prev_problem[0].value);
 
 #if 0
