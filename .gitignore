@@ -1,17 +1,11 @@
-*.dSYM/
-*.swp
-2sum
-cluster_big
-clustering_big_nospace.txt
-core
-heap
-huffman
-karatsuba
-knapsack
-knapsack_big
-median
-mincut
-prim
-print_binary
-scc_take_2
-scheduling
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+# Ignore files with extensions
+*.dSYM
