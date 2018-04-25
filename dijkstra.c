@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
 		token = strtok(line, "\t");
 		s = atoi(token);
 		int flag = 1;
-		while (token = strtok(NULL, ",\t\n\r")){
+		while ((token = strtok(NULL, ",\t\n\r"))) {
 			if (flag) {
 				t = atoi(token);
 				flag = 0;
