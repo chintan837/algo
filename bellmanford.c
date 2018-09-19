@@ -52,7 +52,7 @@ void addEdge(struct Node **nodes, int src, int dst, int length) {
 int main(void) {
     int N = 0, M = 0;
     // FILE *fp = fopen("g1.txt", "r");
-    FILE *fp = fopen("bm-tc1", "r");
+    FILE *fp = fopen("bm-tc0", "r");
     char *line;
     size_t len = 0;
     ssize_t read;
@@ -73,6 +73,7 @@ int main(void) {
         addEdge(nodes, src, dst, length);
     }
 
+    // verify addEdge()
     for (int i = 1; i <= N; i++) {
         struct Node *node = nodes[i];
         printf("Node: %d\n", node->label);
@@ -110,15 +111,14 @@ int main(void) {
     printf("\n");
 
     for (i = 1; i < N; i++) {
-        printf("A[%d][N]:\n", i);
-        for (int n = 1; n <= N; n++) {
+        for (int n = 1; n < N+1; n++) {
             struct EdgeList *current = nodes[n]->ingress;
             int min_weight = INT_MAX;
-            printf("Node: %d ", n);
+            printf("\tNode: %d\n", n);
             while (current) {
-                printf("neighbor: %d weight: %d\n", current->node->label, current->length);
-                int current_weight = A[i-i][current->node->label];
-                printf("current_weight: %d\n", current_weight);
+                printf("\t\tneighbor: %d weight: (%d)\n", current->node->label, current->length);
+                int current_weight = A[i-1][current->node->label];
+                printf("\t\tcurrent_weight: (%d) node: %d\n", current_weight, current->node->label);
                 if (current_weight != INT_MAX) 
                     current_weight += current->length;
                 if (current_weight < min_weight) 
@@ -126,11 +126,16 @@ int main(void) {
 
                 current = current->next;
             }
-            printf("Comparing: %d and %d\n", A[i-1][n], min_weight);
+            printf("\tComparing: %d and (%d)\n", A[i-1][n], min_weight);
             A[i][n] = min(A[i-1][n], min_weight);
-            printf("got: %d\n", A[i][n]);
+            printf("\tgot: %d\n", A[i][n]);
+        }
+        printf("A[%d][N]:\n", i);
+        for (int n = 1; n < N+1; n++) {
+            printf("%d ", A[i][n]);
         }
         printf("\n");
+        getchar();
     }
 
     printf("A[%d][N]:\n", i-1);
