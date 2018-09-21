@@ -77,11 +77,10 @@ struct Node **parse_file(FILE *fp, int *n) {
     int N = 0, M = 0;
 
 	read = getline(&line, &len, fp);
-    if (read < 0) {
+    if (read < 0)
         printf("file seems to be empty");
-        exit(1);
-    }
     sscanf(line, "%d %d\n", &N, &M);
+    printf("N: %d, M: %d\n", N, M);
 
     struct Node **nodes = calloc (N+1, sizeof(struct Node));
     for (int i = 1; i <= N; i++) {
@@ -90,6 +89,7 @@ struct Node **parse_file(FILE *fp, int *n) {
     while ((read = getline(&line, &len, fp)) != -1) {
         int src = 0, dst = 0, length = 0;
         sscanf(line, "%d %d %d\n", &src, &dst, &length);
+        printf("src: %d, dst: %d, length: %d\n", src, dst, length);
         addEdge(nodes, src, dst, length);
     }
     *n = N;
@@ -110,14 +110,22 @@ int bellmanford(struct Node **nodes, int N, int src) {
         A[i][n] = INT_MAX;
     }
     A[i][src] = 0;
+    printf("A[%d][N]:\n", i);
+    for (int n = 1; n < N+1; n++) {
+        printf("%d ", A[i][n]);
+    }
+    printf("\n");
 
     for (i = 1; i < N; i++) {
         stop_early = 1;
         for (int n = 1; n < N+1; n++) {
             struct EdgeList *current = nodes[n]->ingress;
             int min_weight = INT_MAX;
+            printf("\tNode: %d\n", n);
             while (current) {
+                printf("\t\tneighbor: %d weight: (%d)\n", current->node->label, current->length);
                 int current_weight = A[i-1][current->node->label];
+                printf("\t\tcurrent_weight: (%d) node: %d\n", current_weight, current->node->label);
                 if (current_weight != INT_MAX) 
                     current_weight += current->length;
                 if (current_weight < min_weight) 
@@ -125,17 +133,27 @@ int bellmanford(struct Node **nodes, int N, int src) {
 
                 current = current->next;
             }
+            printf("\tComparing: %d and (%d)\n", A[i-1][n], min_weight);
             A[i][n] = min(A[i-1][n], min_weight);
             if (A[i][n] != A[i-1][n])
                 stop_early = 0;
+            printf("\tgot: %d\n", A[i][n]);
         }
+        printf("A[%d][N]:\n", i);
+        for (int n = 1; n < N+1; n++) {
+            printf("%d ", A[i][n]);
+        }
+        printf("\n");
         if (stop_early)
             break;
     }
 
+    printf("A[%d][N]:\n", i-1);
     for (int n = 1; n <= N; n++) {
         min_length = min(A[i-1][n], min_length);
+        printf("%d ", A[i-1][n]);
     }
+    printf("\n");
 
     for (int i = 0; i < N+1; i++) {
         free(A[i]);
@@ -163,11 +181,11 @@ int main(int argc, char **argv) {
     struct Node **nodes = parse_file(fp, &N);
 
     // verify addEdge()
-    // print_graph(nodes, N);
+    print_graph(nodes, N);
     for (int src = 1; src <= 2; src++) {
         min_length = min(bellmanford(nodes, N, src), min_length);
     }
-    printf("%d\n", min_length);
+    printf("min length: %d\n", min_length);
 
     free(nodes);
     fclose(fp);
