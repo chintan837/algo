@@ -144,8 +144,10 @@ int bellmanford(struct Node **nodes, int N, int src) {
             printf("%d ", A[i][n]);
         }
         printf("\n");
-        if (stop_early)
+        if (stop_early) {
+            printf("stopping early\n");
             break;
+        }
     }
 
     printf("A[%d][N]:\n", i-1);
