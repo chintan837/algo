@@ -49,13 +49,26 @@ void addEdge(struct Node **nodes, int src, int dst, int length) {
     listAdd (&nodes[dst]->ingress, nodes[src], length);
 }
 
-int main(void) {
+int main(int argc, char **argv) {
     int N = 0, M = 0;
+    int stop_early = 1;
+
+    if (argc != 2) {
+        printf("Provide file name\n");
+        return (1);
+    }
+    char *filename = argv[1];;
+
     // FILE *fp = fopen("g1.txt", "r");
-    FILE *fp = fopen("bm-tc0", "r");
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen");
+        return (1);
+    }
     char *line;
     size_t len = 0;
     ssize_t read;
+
 	read = getline(&line, &len, fp);
     if (read < 0)
         printf("file seems to be empty");
@@ -111,6 +124,7 @@ int main(void) {
     printf("\n");
 
     for (i = 1; i < N; i++) {
+        stop_early = 1;
         for (int n = 1; n < N+1; n++) {
             struct EdgeList *current = nodes[n]->ingress;
             int min_weight = INT_MAX;
@@ -128,6 +142,8 @@ int main(void) {
             }
             printf("\tComparing: %d and (%d)\n", A[i-1][n], min_weight);
             A[i][n] = min(A[i-1][n], min_weight);
+            if (A[i][n] != A[i-1][n])
+                stop_early = 0;
             printf("\tgot: %d\n", A[i][n]);
         }
         printf("A[%d][N]:\n", i);
@@ -135,7 +151,8 @@ int main(void) {
             printf("%d ", A[i][n]);
         }
         printf("\n");
-        getchar();
+        if (stop_early)
+            break;
     }
 
     printf("A[%d][N]:\n", i-1);
