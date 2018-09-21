@@ -49,44 +49,7 @@ void addEdge(struct Node **nodes, int src, int dst, int length) {
     listAdd (&nodes[dst]->ingress, nodes[src], length);
 }
 
-int main(int argc, char **argv) {
-    int N = 0, M = 0;
-    int stop_early = 1;
-
-    if (argc != 2) {
-        printf("Provide file name\n");
-        return (1);
-    }
-    char *filename = argv[1];;
-
-    // FILE *fp = fopen("g1.txt", "r");
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        perror("fopen");
-        return (1);
-    }
-    char *line;
-    size_t len = 0;
-    ssize_t read;
-
-	read = getline(&line, &len, fp);
-    if (read < 0)
-        printf("file seems to be empty");
-    sscanf(line, "%d %d\n", &N, &M);
-    printf("N: %d, M: %d\n", N, M);
-
-    struct Node **nodes = calloc (N+1, sizeof(struct Node));
-    for (int i = 1; i <= N; i++) {
-        nodes[i] = newNode(i);
-    }
-    while ((read = getline(&line, &len, fp)) != -1) {
-        int src = 0, dst = 0, length = 0;
-        sscanf(line, "%d %d %d\n", &src, &dst, &length);
-        printf("src: %d, dst: %d, length: %d\n", src, dst, length);
-        addEdge(nodes, src, dst, length);
-    }
-
-    // verify addEdge()
+void print_graph(struct Node **nodes, int N) {
     for (int i = 1; i <= N; i++) {
         struct Node *node = nodes[i];
         printf("Node: %d\n", node->label);
@@ -105,13 +68,43 @@ int main(int argc, char **argv) {
         }
         printf("\n");
     }
+}
+
+struct Node **parse_file(FILE *fp, int *n) {
+    char *line;
+    size_t len = 0;
+    ssize_t read;
+    int N = 0, M = 0;
+
+	read = getline(&line, &len, fp);
+    if (read < 0)
+        printf("file seems to be empty");
+    sscanf(line, "%d %d\n", &N, &M);
+    printf("N: %d, M: %d\n", N, M);
+
+    struct Node **nodes = calloc (N+1, sizeof(struct Node));
+    for (int i = 1; i <= N; i++) {
+        nodes[i] = newNode(i);
+    }
+    while ((read = getline(&line, &len, fp)) != -1) {
+        int src = 0, dst = 0, length = 0;
+        sscanf(line, "%d %d %d\n", &src, &dst, &length);
+        printf("src: %d, dst: %d, length: %d\n", src, dst, length);
+        addEdge(nodes, src, dst, length);
+    }
+    *n = N;
+    return nodes;
+}
+
+int bellmanford(struct Node **nodes, int N, int src) {
+    int stop_early = 1;
+    int min_length = INT_MAX;
 
     int **A = calloc(N+1, sizeof(int *));
     for (int i = 0; i < N+1; i++) {
         A[i] = calloc(N+1, sizeof(int));
     }
 
-    int src = 1;
     int i = 0;
     for (int n = 1; n < N+1; n++) {
         A[i][n] = INT_MAX;
@@ -157,6 +150,7 @@ int main(int argc, char **argv) {
 
     printf("A[%d][N]:\n", i-1);
     for (int n = 1; n <= N; n++) {
+        min_length = min(A[i-1][n], min_length);
         printf("%d ", A[i-1][n]);
     }
     printf("\n");
@@ -164,7 +158,34 @@ int main(int argc, char **argv) {
     for (int i = 0; i < N+1; i++) {
         free(A[i]);
     }
-    free (A); 
+    free (A);
+    return min_length;
+}
+
+int main(int argc, char **argv) {
+    int N = 0, M = 0;
+    int min_length = INT_MAX;
+
+    if (argc != 2) {
+        printf("Provide file name\n");
+        return (1);
+    }
+    char *filename = argv[1];;
+
+    // FILE *fp = fopen("g1.txt", "r");
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen");
+        return (1);
+    }
+    struct Node **nodes = parse_file(fp, &N);
+
+    // verify addEdge()
+    print_graph(nodes, N);
+    for (int src = 1; src <= 2; src++) {
+        min_length = min(bellmanford(nodes, N, src), min_length);
+    }
+    printf("min length: %d\n", min_length);
 
     free(nodes);
     fclose(fp);
