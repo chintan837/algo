@@ -96,14 +96,9 @@ struct Node **parse_file(FILE *fp, int *n) {
     return nodes;
 }
 
-int bellmanford(struct Node **nodes, int N, int src) {
+int bellmanford(struct Node **nodes, int N, int src, int **A) {
     int stop_early = 1;
     int min_length = INT_MAX;
-
-    int **A = calloc(N+1, sizeof(int *));
-    for (int i = 0; i < N+1; i++) {
-        A[i] = calloc(N+1, sizeof(int));
-    }
 
     int i = 0;
     for (int n = 1; n < N+1; n++) {
@@ -138,10 +133,6 @@ int bellmanford(struct Node **nodes, int N, int src) {
         min_length = min(A[i-1][n], min_length);
     }
 
-    for (int i = 0; i < N+1; i++) {
-        free(A[i]);
-    }
-    free (A);
     return min_length;
 }
 
@@ -165,11 +156,21 @@ int main(int argc, char **argv) {
 
     // verify addEdge()
     // print_graph(nodes, N);
-    for (int src = 1; src <= 2; src++) {
-        min_length = min(bellmanford(nodes, N, src), min_length);
+    int **A = calloc(N+1, sizeof(int *));
+    for (int i = 0; i < N+1; i++) {
+        A[i] = calloc(N+1, sizeof(int));
+    }
+
+    for (int src = 1; src <= N; src++) {
+        printf("processing node: %d\n", src);
+        min_length = min(bellmanford(nodes, N, src, A), min_length);
     }
     printf("%d\n", min_length);
 
+    for (int i = 0; i < N+1; i++) {
+        free(A[i]);
+    }
+    free (A);
     free(nodes);
     fclose(fp);
 }
