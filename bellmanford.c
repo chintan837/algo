@@ -106,7 +106,7 @@ int bellmanford(struct Node **nodes, int N, int src, int **A) {
     }
     A[i][src] = 0;
 
-    for (i = 1; i < N; i++) {
+    for (i = 1; i <= N; i++) {
         stop_early = 1;
         for (int n = 1; n < N+1; n++) {
             struct EdgeList *current = nodes[n]->ingress;
@@ -121,11 +121,16 @@ int bellmanford(struct Node **nodes, int N, int src, int **A) {
                 current = current->next;
             }
             A[i][n] = min(A[i-1][n], min_weight);
-            if (A[i][n] != A[i-1][n])
+            if (A[i][n] < A[i-1][n])
                 stop_early = 0;
         }
         if (stop_early) {
             break;
+        }
+        if (i == N) {
+            // we are here, and stop_early did not kick in, -ve edge
+            printf("NULL\n");
+            exit (0);
         }
     }
 
