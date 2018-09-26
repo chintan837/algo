@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
                     A[i][j][k] = 0; //path to self is 0
                 else
                     A[i][j][k] = INT_MAX;
-                }
+            }
         }
     }
 
