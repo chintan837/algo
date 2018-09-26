@@ -2,25 +2,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-struct node;
-struct nodelist;
-
-struct node {
-	int label;
-	struct nodelist *out;
-};
-
-struct nodelist {
-	struct node *node;
-	struct nodelist *next;
-};
-
-struct edge {
-    int source;
-    int dest;
-    int weight;
-};
-
 static inline int min(int a, int b) { return (a < b? a : b); }
 static inline int sum(int a, int b) {
     if (a == INT_MAX)
@@ -30,21 +11,8 @@ static inline int sum(int a, int b) {
     return (a + b);
 }
 
-void addedge (int a, int b, int weight, struct edge **edges, struct node **nodes) {
-
-}
-
-int get_weight(int i, int j) {
-    return 0;
-}
-
-int is_edge(int i, int j) {
-    return 0;
-}
-
 int main(int argc, char **argv) {
     int N = 0, M = 0;
-    int min_length = INT_MAX;
 
     if (argc != 2) {
         printf("Provide file name\n");
@@ -67,12 +35,6 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 	sscanf(line, "%d %d", &N, &M);
-    struct edge *edges = calloc (M+1, sizeof(struct edge));
-	struct node *nodes = calloc (N+1, sizeof(struct node));
-    for (int i = 1; i < N+1; i++) {
-        nodes[i].label = i;
-        nodes[i].out = NULL;
-    }
 
     printf("alloc\n");
     int ***A = (int ***) malloc((N+1) * sizeof(int **));
@@ -141,8 +103,6 @@ int main(int argc, char **argv) {
         free(A[i]);
     }
     free(A);
-	free(edges);
-	free(nodes);
 	free(line);
 	fclose(fp);
 }
