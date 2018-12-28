@@ -166,11 +166,11 @@ int main(int argc, char **argv) {
         A[i] = calloc(N+1, sizeof(int));
     }
 
-    for (int src = 1; src <= N; src++) {
-        printf("processing node: %d\n", src);
-        min_length = min(bellmanford(nodes, N, src, A), min_length);
-    }
-    printf("%d\n", min_length);
+    printf("calculating new weights\n");
+    // add a dummy node in nodes at pos 0
+    nodes[0] = newNode(0);
+    nodes[0]->egress = NULL;
+    bellmanford(nodes, N, 0, A);
 
     for (int i = 0; i < N+1; i++) {
         free(A[i]);
