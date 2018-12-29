@@ -9,11 +9,13 @@ struct Node;
 struct EdgeList {
     struct Node *node;
     int length;
+    int plength;
     struct EdgeList *next;
 };
 
 struct Node {
     int label;
+    int p;
     struct EdgeList *ingress;
     struct EdgeList *egress;
 };
@@ -25,10 +27,10 @@ void listAdd(struct EdgeList **nl, struct Node* node, int length) {
 
     newElem->node = node;
     newElem->length = length;
+    newElem->plength = 0;
     newElem->next = NULL;
     if (nl == NULL) {
        *nl = newElem;
-       return;
     } else {
         newElem->next = *nl;
         *nl = newElem;
@@ -38,6 +40,7 @@ void listAdd(struct EdgeList **nl, struct Node* node, int length) {
 struct Node *newNode(int label) {
     struct Node *newNode = malloc(sizeof(struct Node));
     newNode->label = label;
+    newNode->p = 0;
     newNode->ingress = NULL;
     newNode->egress = NULL;
 
@@ -76,7 +79,7 @@ struct Node **parse_file(FILE *fp, int *n) {
     ssize_t read;
     int N = 0, M = 0;
 
-	read = getline(&line, &len, fp);
+    read = getline(&line, &len, fp);
     if (read < 0) {
         printf("file seems to be empty");
         exit(1);
@@ -96,19 +99,26 @@ struct Node **parse_file(FILE *fp, int *n) {
     return nodes;
 }
 
-int bellmanford(struct Node **nodes, int N, int src, int **A) {
-    int stop_early = 1;
+void bellmanford(struct Node **nodes, int N, int src, int **A) {
+    int stop_early = 0;
     int min_length = INT_MAX;
+    int i;
 
-    int i = 0;
+    i = 0;
     for (int n = 1; n < N+1; n++) {
         A[i][n] = INT_MAX;
     }
     A[i][src] = 0;
 
-    for (i = 1; i <= N; i++) {
+    i = 1;
+    for (int n = 1; n <= N; n++) {
+        A[i][n] = 0;
+    }
+    A[i][src] = 0;
+
+    for (i = 2; i < N; i++) {
         stop_early = 1;
-        for (int n = 1; n < N+1; n++) {
+        for (int n = 1; n <= N; n++) {
             struct EdgeList *current = nodes[n]->ingress;
             int min_weight = INT_MAX;
             while (current) {
@@ -125,6 +135,8 @@ int bellmanford(struct Node **nodes, int N, int src, int **A) {
                 stop_early = 0;
         }
         if (stop_early) {
+            printf("stopping early\n");
+            printf("i: %d\n", i);
             break;
         }
         if (i == N) {
@@ -134,11 +146,12 @@ int bellmanford(struct Node **nodes, int N, int src, int **A) {
         }
     }
 
-    for (int n = 1; n <= N; n++) {
-        min_length = min(A[i-1][n], min_length);
+    for (int k = 1; k <= N; k++) {
+        nodes[k]->p = A[i][k];
+        printf("%d| node %d new label for dijkstras %d\n", i, nodes[k]->label, nodes[k]->p);
     }
 
-    return min_length;
+    return;
 }
 
 int main(int argc, char **argv) {
@@ -172,7 +185,7 @@ int main(int argc, char **argv) {
     nodes[0]->egress = NULL;
     bellmanford(nodes, N, 0, A);
 
-    for (int i = 0; i < N+1; i++) {
+    for (int i = 0; i <= N; i++) {
         free(A[i]);
     }
     free (A);
