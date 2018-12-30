@@ -15,7 +15,9 @@ struct EdgeList {
 
 struct Node {
     int label;
-    int p;
+    int bellman_weight;
+    int dijkstra_key;
+    int dijkstra_seen;
     struct EdgeList *ingress;
     struct EdgeList *egress;
 };
@@ -40,7 +42,7 @@ void listAdd(struct EdgeList **nl, struct Node* node, int length) {
 struct Node *newNode(int label) {
     struct Node *newNode = malloc(sizeof(struct Node));
     newNode->label = label;
-    newNode->p = 0;
+    newNode->bellman_weight = 0;
     newNode->ingress = NULL;
     newNode->egress = NULL;
 
@@ -99,7 +101,7 @@ struct Node **parse_file(FILE *fp, int *n) {
     return nodes;
 }
 
-void bellmanford(struct Node **nodes, int N, int src, int **A) {
+int bellmanford(struct Node **nodes, int N, int src, int **A) {
     int stop_early = 0;
     int min_length = INT_MAX;
     int i;
@@ -146,12 +148,57 @@ void bellmanford(struct Node **nodes, int N, int src, int **A) {
         }
     }
 
-    for (int k = 1; k <= N; k++) {
-        nodes[k]->p = A[i][k];
-        printf("%d| node %d new label for dijkstras %d\n", i, nodes[k]->label, nodes[k]->p);
-    }
+    return i;
+}
 
-    return;
+struct heap {
+    int max_len;
+    int length;
+    void **ptr;
+};
+
+struct heap *heap_init(int len) {
+    struct heap *heap = calloc(1, sizeof(struct heap));
+
+    heap->max_len = len;
+    heap->length = 0;
+    heap->ptr = calloc(heap->max_len, sizeof(void *));
+    return heap;
+}
+
+void heap_insert(void *node, struct heap *heap) {
+    heap->ptr[heap->length] = node;
+}
+
+void *heap_extract_min(struct heap *heap) {
+
+    return NULL;
+}
+
+void dijkstras(struct Node **nodes, int src, int **A, int N) {
+    //init keys
+    for (int i = 1; i <= N; i++) {
+        nodes[i]->dijkstra_key = INT_MAX;
+        nodes[i]->dijkstra_seen = 0;
+    }
+    nodes[src]->dijkstra_key = 0;
+
+    struct heap *heap = heap_init(N);
+
+    //insert all nodes into heap, src at min
+    for (int i = 1; i <= N; i++) {
+        heap_insert(nodes[i], heap);
+    }
+    //extract min
+    struct Node *node;
+    while ((node = heap_extract_min(heap))) {
+
+    //go over all of its edges and update keys (delete node from the middle of heap &
+    //reinsert it with new key)
+    //
+    }
+    //get the distance of all nodes from source in A
+    //
 }
 
 int main(int argc, char **argv) {
@@ -183,7 +230,25 @@ int main(int argc, char **argv) {
     // add a dummy node in nodes at pos 0
     nodes[0] = newNode(0);
     nodes[0]->egress = NULL;
-    bellmanford(nodes, N, 0, A);
+    int index = bellmanford(nodes, N, 0, A);
+
+    for (int i = 1; i <= N; i++) {
+        nodes[i]->bellman_weight = A[index][i];
+        printf("%d| node %d new label for dijkstras %d\n", index, nodes[i]->label, nodes[i]->bellman_weight);
+    }
+
+    for (int i = 1; i <= N; i++) {
+        struct EdgeList *current = nodes[i]->egress;
+        while (current) {
+            current->plength = current->length + nodes[i]->bellman_weight - current->node->bellman_weight;
+            printf("Edge (%d, %d), length: %d, plength: %d\n", nodes[i]->label, current->node->label, current->length, current->plength);
+            current = current->next;
+        }
+    }
+
+    for (int i = 1; i <= N; i++) {
+        dijkstras(nodes, i, A, N);
+    }
 
     for (int i = 0; i <= N; i++) {
         free(nodes[i]);
