@@ -186,6 +186,7 @@ int main(int argc, char **argv) {
     bellmanford(nodes, N, 0, A);
 
     for (int i = 0; i <= N; i++) {
+        free(nodes[i]);
         free(A[i]);
     }
     free (A);
